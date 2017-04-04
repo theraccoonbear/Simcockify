@@ -5,16 +5,16 @@ $(function() {
     window.KEYBOARD_MAPS = {
     	QWERTY: {
       	standard: [
-        	"`1234567890-=".split(''),
-        	"\tqwertyuiop[]\\".split(''),
-          "asdfghjkl;'".split(''),
-          "zxcvbnm,./".split('')
+					"`1234567890-=".split(''),
+					"\tqwertyuiop[]\\".split(''),
+					"asdfghjkl;'".split(''),
+					"zxcvbnm,./".split('')
         ],
         shift: [
-        	"~!@#$%^&*()_+".split(''),
-        	"\tQWERTYUIOP{}|".split(''),
-          "ASDFGHJKL:\"".split(''),
-          "ZXCVBNM<>?".split('')
+					"~!@#$%^&*()_+".split(''),
+					"\tQWERTYUIOP{}|".split(''),
+					"ASDFGHJKL:\"".split(''),
+					"ZXCVBNM<>?".split('')
         ]
       }
     };
