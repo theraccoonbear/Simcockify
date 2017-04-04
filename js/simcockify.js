@@ -87,19 +87,19 @@ $(function() {
 					}
 					return text;
 				}, // miskey()
-				missingSpace: function(text) {
-					if (!/\s/.test(text)) {
-						return text;
-					}
-					var newText = text;
-					do {
-						var offset = Math.floor(Math.random() * text.length);
-						var rgx = new RegExp("^(.{" + offset + ",})\\s");
-						newText = text.replace(rgx, '$1');
-					} while (newText == text);
-					
-					return newText;
-				} // missingSpace()
+				//missingSpace: function(text) {
+				//	if (!/\s/.test(text)) {
+				//		return text;
+				//	}
+				//	var newText = text;
+				//	do {
+				//		var offset = Math.floor(Math.random() * text.length);
+				//		var rgx = new RegExp("^(.{" + offset + ",})\\s");
+				//		newText = text.replace(rgx, '$1');
+				//	} while (newText == text);
+				//	
+				//	return newText;
+				//} // missingSpace()
 			}; // Typos
 			
 			var typesOfTypos = Object.keys(Typos);
@@ -120,7 +120,7 @@ $(function() {
 			var config = {
 				typosPerWord: Math.min(0.1, 0.1),
 				wordSplitRgx: new RegExp(/[\s,;.-]/g),
-				velocity: 2 + Math.min(0, (opts.FiveHourEnergies / 3) + (opts.Coffees / 5) + (opts.Espressos / 2))
+				velocity: 2 + Math.round(Math.max(0, (opts.FiveHourEnergies / 3) + (opts.Coffees / 5) + (opts.Espressos / 2)))
 			};
 	
 			var getNewContent = function(node) {
