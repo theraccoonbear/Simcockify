@@ -1,29 +1,29 @@
 $(function() {
-  (function($) {
-    console.clear();
-    
-    window.KEYBOARD_MAPS = {
-    	QWERTY: {
-      	standard: [
+	(function($) {
+		console.clear();
+		
+		window.KEYBOARD_MAPS = {
+			QWERTY: {
+				standard: [
 					"`1234567890-=".split(''),
 					"\tqwertyuiop[]\\".split(''),
 					"asdfghjkl;'".split(''),
 					"zxcvbnm,./".split('')
-        ],
-        shift: [
+				],
+				shift: [
 					"~!@#$%^&*()_+".split(''),
 					"\tQWERTYUIOP{}|".split(''),
 					"ASDFGHJKL:\"".split(''),
 					"ZXCVBNM<>?".split('')
-        ]
-      }
-    };
-    
-    $.fn.outerHTML = function(s) {
-      return s ? this.before(s).remove() : jQuery("<p>").append(this.eq(0).clone()).html();
-    };
-    
-    $.fn.simcockify = function(options) {
+				]
+			}
+		};
+		
+		$.fn.outerHTML = function(s) {
+			return s ? this.before(s).remove() : jQuery("<p>").append(this.eq(0).clone()).html();
+		};
+		
+		$.fn.simcockify = function(options) {
 			var accessibleKeys = function(intendedCharacter, keyboardMap, range) {
 				var inMap = false, inRow = false, atCol = false;
 			
@@ -104,62 +104,62 @@ $(function() {
 			
 			var typesOfTypos = Object.keys(Typos);
 			
-    	var optDefaults = {
-        FiveHourEnergies: 1,
-        Espressos: 0,
-        Coffees: 3,
-        MinutesTalkingToClients: 90,
-        DeadlinesLooming: 2,
-        HoursOfSleep: 5,
-        EmployeesBlocked: 1,
-        KeyboardType: window.KEYBOARD_MAPS.QWERTY
-      };
-
-      var opts = $.extend({}, optDefaults, options);
-
-      var config = {
-        typosPerWord: Math.min(0.1, 0.1),
-        wordSplitRgx: new RegExp(/[\s,;.-]/g),
-        velocity: 2 + Math.min(0, (opts.FiveHourEnergies / 3) + (opts.Coffees / 5) + (opts.Espressos / 2))
-      };
-
-      var getNewContent = function(node) {
-        var $node = $(node);
-
-        var nodeContent = [];
-        var nType = $node.get(0).nodeName;
-        if (nType == '#text') {
-          var text = node.textContent.trim() || '';
+			var optDefaults = {
+				FiveHourEnergies: 1,
+				Espressos: 0,
+				Coffees: 3,
+				MinutesTalkingToClients: 90,
+				DeadlinesLooming: 2,
+				HoursOfSleep: 5,
+				EmployeesBlocked: 1,
+				KeyboardType: window.KEYBOARD_MAPS.QWERTY
+			};
+	
+			var opts = $.extend({}, optDefaults, options);
+	
+			var config = {
+				typosPerWord: Math.min(0.1, 0.1),
+				wordSplitRgx: new RegExp(/[\s,;.-]/g),
+				velocity: 2 + Math.min(0, (opts.FiveHourEnergies / 3) + (opts.Coffees / 5) + (opts.Espressos / 2))
+			};
+	
+			var getNewContent = function(node) {
+				var $node = $(node);
+	
+				var nodeContent = [];
+				var nType = $node.get(0).nodeName;
+				if (nType == '#text') {
+					var text = node.textContent.trim() || '';
 					
-          if (text.length > 1) {
-            var words = text.split(config.wordSplitRgx);
-            var typosNeeded = Math.ceil(words.length * config.typosPerWord);
-            var typoCount = 0;
-            
-            do {
+					if (text.length > 1) {
+						var words = text.split(config.wordSplitRgx);
+						var typosNeeded = Math.ceil(words.length * config.typosPerWord);
+						var typoCount = 0;
+						
+						do {
 							var doWhat = typesOfTypos[Math.floor(Math.random() * typesOfTypos.length)];
 							var typoFunc = Typos[doWhat];
 							console.log(`Doing a ${doWhat} typo on`, text);
 							text = typoFunc(text);
 							typoCount++;
-            } while (typoCount < typosNeeded);
-            console.log(`Inserted ${typoCount} typos`);
-          }
-          nodeContent.push(text);
-        } else {
-          var outer = $($node.outerHTML()).html('').outerHTML();
-          var tags = outer.split('></');
-          nodeContent.push(tags[0] + '>');
-          $node.contents().each(function(i, el) {
-            nodeContent.push(getNewContent(el));
-          });
-          nodeContent.push('</' + tags[1]);
-        }
-        return nodeContent.join(' ');
-      };
-      var $this = $(this);
-      var cont = getNewContent(this);
-      $this.replaceWith(cont);
-    };
-  }(jQuery));
+						} while (typoCount < typosNeeded);
+						console.log(`Inserted ${typoCount} typos`);
+					}
+					nodeContent.push(text);
+				} else {
+					var outer = $($node.outerHTML()).html('').outerHTML();
+					var tags = outer.split('></');
+					nodeContent.push(tags[0] + '>');
+					$node.contents().each(function(i, el) {
+						nodeContent.push(getNewContent(el));
+					});
+					nodeContent.push('</' + tags[1]);
+				}
+				return nodeContent.join(' ');
+			};
+			var $this = $(this);
+			var cont = getNewContent(this);
+			$this.replaceWith(cont);
+		};
+	}(jQuery));
 });
