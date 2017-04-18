@@ -24,13 +24,38 @@ $(function() {
 		};
 		
 		$.fn.simcockify = function(options) {
-			var accessibleKeys = function(intendedCharacter, keyboardMap, range) {
+			var optDefaults = {
+				debug: true,
+				FiveHourEnergies: 1,
+				Espressos: 0,
+				Coffees: 3,
+				MinutesTalkingToClients: 90,
+				DeadlinesLooming: 2,
+				HoursOfSleep: 5,
+				EmployeesBlocked: 1,
+				KeyboardType: window.KEYBOARD_MAPS.QWERTY
+			};
+	
+			var opts = $.extend({}, optDefaults, options);
+	
+			var config = {
+				typosPerWord: Math.min(0.1, 0.1),
+				wordSplitRgx: new RegExp(/[\s,;.-]/g),
+				velocity: 2 + Math.round(Math.max(0, (opts.FiveHourEnergies / 3) + (opts.Coffees / 5) + (opts.Espressos / 2)))
+			};
+			
+			var logMsg = function(msg) {
+				if (opts.debug) {
+					console.log(msg);
+				}
+			};
+			
+			var accessibleKeys = function(intendedCharacter, keyboardMap, velocity) {
 				var inMap = false, inRow = false, atCol = false;
 			
 				mapLoop:
 				for (var m in keyboardMap) {
 					if (keyboardMap.hasOwnProperty(m)) {
-						console.log(`searching ${m}`);
 						var map = keyboardMap[m];
 						rowLoop:
 						for (var r = 0; r < map.length; r++) {
@@ -49,13 +74,14 @@ $(function() {
 					return [intendedCharacter];
 				}
 				
-				var rowFrom = Math.max(0, inRow - velocity);
-				var rowTo = Math.min(keyboardMap[inMap].length - 1, inRow + velocity);
+				var rowFrom = Math.max(0, inRow - (velocity / 3));
+				var rowTo = Math.min(keyboardMap[inMap].length - 1, inRow + (velocity / 3));
 				var sets = [];
 				for (var rIdx = rowFrom; rIdx < rowTo; rIdx++) {
-					sets.push(keyboardMap[inMap][inRow].slice(Math.max(0, atCol - velocity), 2 * velocity).join());
+					sets.push(keyboardMap[inMap][rIdx].slice(Math.max(0, atCol - velocity), 2 * velocity).join(''));
 				}
-				return sets.join('').split('');
+				const allChars = sets.join('').split('');
+				return allChars.length > 0 ? allChars : [intendedCharacter];
 			}; // accessibleKeys()
 			
 			var replaceAt = function(str, index, replacement) {
@@ -77,13 +103,24 @@ $(function() {
 							text = replaceAt(text, idx1, char2);
 							text = replaceAt(text, idx2, char1);
 							typoCount++;
+							logMsg (`  >Swapping character '${char1}' at ${idx1} and '${char2}' at ${idx2}`);
 						}
 					}
 					return text;
 				}, // transposition()
 				miskey: function(text) {
 					if (/[^\s]/.test(text)) {
-						return text;
+						var i1;
+						var attemptCnt = 0;
+						do {
+							i1 = Math.min(text.length - 1, Math.max(0, Math.floor(Math.random() * text.length - 1)));
+						} while (text[i1] !== ' ' && ++attemptCnt < 10);
+						
+						var chr = text[i1];
+						var altChrs = accessibleKeys(chr, window.KEYBOARD_MAPS.QWERTY, config.velocity);
+						var altChr = altChrs[Math.floor(Math.random(0, altChrs.length - 1))];
+						logMsg(`  > Replacing '${chr}' with '${altChr}' at position ${i1} in "${text}"`);
+						return replaceAt(text, i1, altChr);
 					}
 					return text;
 				}, // miskey()
@@ -104,25 +141,6 @@ $(function() {
 			
 			var typesOfTypos = Object.keys(Typos);
 			
-			var optDefaults = {
-				FiveHourEnergies: 1,
-				Espressos: 0,
-				Coffees: 3,
-				MinutesTalkingToClients: 90,
-				DeadlinesLooming: 2,
-				HoursOfSleep: 5,
-				EmployeesBlocked: 1,
-				KeyboardType: window.KEYBOARD_MAPS.QWERTY
-			};
-	
-			var opts = $.extend({}, optDefaults, options);
-	
-			var config = {
-				typosPerWord: Math.min(0.1, 0.1),
-				wordSplitRgx: new RegExp(/[\s,;.-]/g),
-				velocity: 2 + Math.round(Math.max(0, (opts.FiveHourEnergies / 3) + (opts.Coffees / 5) + (opts.Espressos / 2)))
-			};
-	
 			var getNewContent = function(node) {
 				var $node = $(node);
 	
@@ -139,11 +157,12 @@ $(function() {
 						do {
 							var doWhat = typesOfTypos[Math.floor(Math.random() * typesOfTypos.length)];
 							var typoFunc = Typos[doWhat];
-							console.log(`Doing a ${doWhat} typo on`, text);
+							logMsg(`Doing a '${doWhat}' typo on "${text}":`);
 							text = typoFunc(text);
 							typoCount++;
 						} while (typoCount < typosNeeded);
-						console.log(`Inserted ${typoCount} typos`);
+						logMsg(`Inserted ${typoCount} typos`);
+						logMsg('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-')
 					}
 					nodeContent.push(text);
 				} else {
