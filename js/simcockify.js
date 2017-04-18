@@ -1,7 +1,10 @@
+if (!window) { window = global || {}; }
+
 $(function() {
-	(function($) {
+	(function($) {		
 		console.clear();
 		
+		// Just dump it in the global namespace, like a boss
 		window.KEYBOARD_MAPS = {
 			QWERTY: {
 				standard: [
@@ -40,17 +43,18 @@ $(function() {
 			};
 	
 			var opts = $.extend({}, optDefaults, options);
+			console.log(opts);
 	
 			var typoFrequencyFactor = 0 +
-				((24 - opts.HoursOfSleep) / 24) +
-				(opts.DeadlinesLooming / 10) +
-				(opts.EmployeesBlocked / 5) +
+				(((24 - opts.HoursOfSleep) / 24) / 2) +
+				(opts.DeadlinesLooming / 20) +
+				(opts.EmployeesBlocked / 15) +
 				(opts.MinutesTalkingToClients / 1440);
 				
 			var typoVelocityFactor = 2 +
-				(opts.FiveHourEnergies / 5) +
+				(opts.FiveHourEnergies / 8) +
 				(opts.Coffees / 10) +
-				(opts.Espressos / 3);
+				(opts.Espressos / 5);
 			
 			var config = {
 				typosPerWord: Math.max(0.1, typoFrequencyFactor),
@@ -58,7 +62,7 @@ $(function() {
 				velocity: 2 + Math.round(Math.max(0, typoVelocityFactor))
 			};
 			
-			console.log('CONFIG:', config);
+			console.log(config);
 			
 			var logMsg = function(msg) {
 				if (opts.debug) {
@@ -90,7 +94,7 @@ $(function() {
 					return [intendedCharacter];
 				}
 				
-				var rowFrom = Math.max(0, inRow - (velocity / 1.5));
+				var rowFrom = Math.round(Math.max(0, inRow - (velocity / 1.5)));
 				var rowTo = Math.min(keyboardMap[inMap].length - 1, inRow + (velocity / 1.5));
 				var sets = [];
 				for (var rIdx = rowFrom; rIdx < rowTo; rIdx++) {
@@ -106,6 +110,7 @@ $(function() {
 	
 			var Typos = {
 				transposition: {
+					probabiliy: 0.6,
 					action: function(text) {
 						if (text.length > 1) {
 							var typoCount = 0;
@@ -127,6 +132,7 @@ $(function() {
 					} // transposition()
 				},
 				miskey: {
+					probability: 0.3,
 					action: function(text) {
 						if (/[^\s]/.test(text)) {
 							var i1;
@@ -135,7 +141,7 @@ $(function() {
 								i1 = Math.min(text.length - 1, Math.max(0, Math.floor(Math.random() * text.length - 1)));
 							} while (/\s/.test(text[i1]) && ++attemptCnt < 10);
 							var chr = text[i1];
-							var altChrs = accessibleKeys(chr, window.KEYBOARD_MAPS.QWERTY, config.velocity);
+							var altChrs = accessibleKeys(chr, opts.KeyboardType, config.velocity);
 							var altChr = altChrs[Math.floor(Math.random() * altChrs.length)];
 							logMsg(`  > Miskey: replacing '${chr}' with '${altChr}' at position ${i1} in "${text}"`);
 							return replaceAt(text, i1, altChr);
@@ -144,6 +150,7 @@ $(function() {
 					} // miskey()
 				},
 				extraCharacter: {
+					probability: '*',
 					action: function(text) {
 						if (/[^\s]/.test(text)) {
 							var i1;
@@ -152,7 +159,7 @@ $(function() {
 								i1 = Math.min(text.length - 1, Math.max(0, Math.floor(Math.random() * text.length - 1)));
 							} while (/\s/.test(text[i1]) && ++attemptCnt < 10);
 							var chr = text[i1];
-							var altChrs = accessibleKeys(chr, window.KEYBOARD_MAPS.QWERTY, config.velocity);
+							var altChrs = accessibleKeys(chr, opts.KeyboardType, config.velocity);
 							var altChr = altChrs[Math.floor(Math.random() * altChrs.length)];
 							
 							var replacement = (Math.random() < 0.5 ? [chr, altChr] : [altChr, chr]).join('');
