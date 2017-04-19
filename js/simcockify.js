@@ -224,19 +224,18 @@ $(function() {
 					}
 					nodeContent.push(text);
 				} else {
-					var outer = $($node.outerHTML()).html('').outerHTML();
-					var tags = outer.split('></');
-					nodeContent.push(tags[0] + '>');
-					$node.contents().each(function(i, el) {
-						if ($(el).is(opts.Exclude)) {
-							// @todo support returning nodes without typos
+					var exclude = $node.is(opts.Exclude);
+					if (exclude) {
+						nodeContent.push($node.outerHTML());
+					} else {
+						var outer = $($node.outerHTML()).html('').outerHTML();
+						var tags = outer.split('></');
+						nodeContent.push(tags[0] + '>');
+						$node.contents().each(function(i, el) {
 							nodeContent.push(getNewContent(el));
-						} else {
-							nodeContent.push(getNewContent(el));
-						}
-						
-					});
-					nodeContent.push('</' + tags[1]);
+						});
+						nodeContent.push('</' + tags[1]);
+					}
 				}
 				return nodeContent.join(' ');
 			};
