@@ -49,7 +49,8 @@ $(function() {
 				(Math.abs(opts.HoursOfSleep - 8) / 8) +
 				(opts.DeadlinesLooming / 20) +
 				(opts.EmployeesBlocked / 15) +
-				(opts.MinutesTalkingToClients / 1440)
+				(opts.MinutesTalkingToClients / 1440) +
+				((Math.abs(2 - opts.Coffees) + opts.FiveHourEnergies + opts.Espressos) > 0 ? 0.5 : 0)
 			) / 5;
 				
 			var typoVelocityFactor = 2 +
@@ -127,7 +128,7 @@ $(function() {
 					} // miskey()
 				},
 				transposition: {
-					probability: 0.6, // 60% chance
+					probability: 0.85, // 85% chance
 					action: function(text) {
 						if (text.length > 1) {
 							var i1 = Math.min(text.length - 1, Math.max(0, Math.floor(Math.random() * text.length - 1)));
@@ -147,7 +148,7 @@ $(function() {
 					} // transposition()
 				},
 				extraCharacter: {
-					probability: '*', // take up the slack (impl. 30% chance)
+					probability: '*', // take up the slack (impl. 5% chance)
 					action: function(text) {
 						if (/[^\s]/.test(text)) {
 							var i1;
@@ -212,11 +213,12 @@ $(function() {
 						var typosNeeded = Math.ceil(words.length * config.typosPerWord);
 						var typoCount = 0;
 						logMsg(`Analyzing ${words.length} words and generating ${typosNeeded} typos at velocity ${config.velocity}`);
-						do {
+						//do {
+						for (var typoCount = 0; typoCount < typosNeeded; typoCount++) {
 							var typoFunc = randomTypo().action;
 							text = typoFunc(text);
 							typoCount++;
-						} while (typoCount < typosNeeded);
+						}
 						logMsg(`Inserted ${typoCount} typos`);
 						logMsg('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-');
 					}
