@@ -59,7 +59,7 @@ $(function() {
 			
 			var config = {
 				typosPerWord: typoFrequencyFactor,
-				wordSplitRgx: new RegExp(/[\s,;.-]/g),
+				wordSplitRgx: new RegExp(/[\s,;.!?-]/g),
 				velocity: 2 + Math.round(Math.max(0, typoVelocityFactor))
 			};
 
@@ -226,7 +226,13 @@ $(function() {
 					var tags = outer.split('></');
 					nodeContent.push(tags[0] + '>');
 					$node.contents().each(function(i, el) {
-						nodeContent.push(getNewContent(el));
+						if ($(el).is(opts.Exclude)) {
+							// @todo support returning nodes without typos
+							nodeContent.push(getNewContent(el));
+						} else {
+							nodeContent.push(getNewContent(el));
+						}
+						
 					});
 					nodeContent.push('</' + tags[1]);
 				}
