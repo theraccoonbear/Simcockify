@@ -1,10 +1,9 @@
+/* global $ jQuery: true */
 if (!window) { window = global || {}; }
 
 $(function() {
 	(function($) {		
-		console.clear();
-		
-		// Just dump it in the global namespace, like a boss
+
 		window.KEYBOARD_MAPS = {
 			QWERTY: {
 				standard: [
@@ -23,47 +22,47 @@ $(function() {
 		};
 		
 		$.fn.outerHTML = function(s) {
-			return s ? this.before(s).remove() : jQuery("<p>").append(this.eq(0).clone()).html();
+			return s ? this.before(s).remove() : $("<p>").append(this.eq(0).clone()).html();
 		};
 		
 		$.fn.simcockify = function(options) {
 			var optDefaults = {
-				debug: false,
+				Exclude: '.no-simcockify', // exclusion selector 
+				KeyboardType: window.KEYBOARD_MAPS.QWERTY, // physical keyboard layout
+				debug: false, // dribble out activity messages?
+
 				// Velocity factors
-				FiveHourEnergies: 1,
+				FiveHourEnergies: 0,
 				Espressos: 0,
-				Coffees: 3,
+				Coffees: 0,
+				
 				// Frequency factors
-				HoursOfSleep: 5,
-				MinutesTalkingToClients: 90,
-				DeadlinesLooming: 2,
-				EmployeesBlocked: 1,
-				Exclude: '.no-simcockify',
-				KeyboardType: window.KEYBOARD_MAPS.QWERTY,
+				HoursOfSleep: 8,
+				MinutesTalkingToClients: 0,
+				DeadlinesLooming: 0,
+				EmployeesBlocked: 0,
 			};
 	
 			var opts = $.extend({}, optDefaults, options);
-			console.log(opts);
 	
-			var typoFrequencyFactor = 0 +
-				(((24 - opts.HoursOfSleep) / 24) / 2) +
+			var typoFrequencyFactor = (
+				(Math.abs(opts.HoursOfSleep - 8) / 8) +
 				(opts.DeadlinesLooming / 20) +
 				(opts.EmployeesBlocked / 15) +
-				(opts.MinutesTalkingToClients / 1440);
+				(opts.MinutesTalkingToClients / 1440)
+			) / 5;
 				
 			var typoVelocityFactor = 2 +
 				(opts.FiveHourEnergies / 8) +
-				(opts.Coffees / 10) +
+				(Math.abs(opts.Coffees - 2) / 10) +
 				(opts.Espressos / 5);
 			
 			var config = {
-				typosPerWord: Math.max(0.1, typoFrequencyFactor),
+				typosPerWord: typoFrequencyFactor,
 				wordSplitRgx: new RegExp(/[\s,;.-]/g),
 				velocity: 2 + Math.round(Math.max(0, typoVelocityFactor))
 			};
-			
-			console.log(config);
-			
+
 			var logMsg = function(msg) {
 				if (opts.debug) {
 					console.log(msg);
@@ -94,8 +93,8 @@ $(function() {
 					return [intendedCharacter];
 				}
 				
-				var rowFrom = Math.round(Math.max(0, inRow - (velocity / 1.5)));
-				var rowTo = Math.min(keyboardMap[inMap].length - 1, inRow + (velocity / 1.5));
+				var rowFrom = Math.round(Math.max(0, inRow - (velocity / 2)));
+				var rowTo = Math.round(Math.min(keyboardMap[inMap].length - 1, inRow + (velocity / 2)));
 				var sets = [];
 				for (var rIdx = rowFrom; rIdx < rowTo; rIdx++) {
 					sets.push(keyboardMap[inMap][rIdx].slice(Math.max(0, atCol - velocity), 2 * velocity).join(''));
@@ -109,30 +108,8 @@ $(function() {
 			}; // replaceAt()
 	
 			var Typos = {
-				transposition: {
-					probabiliy: 0.6,
-					action: function(text) {
-						if (text.length > 1) {
-							var typoCount = 0;
-							var i1 = Math.min(text.length - 1, Math.max(0, Math.floor(Math.random() * text.length - 1)));
-							var i2 = Math.min(text.length - 1, Math.max(0, i1 + Math.floor(Math.random() * config.velocity * 2) - config.velocity));
-			
-							var idx1 = Math.min(i1, i2);
-							var idx2 = Math.max(i1, i2);
-							if (idx1 != idx2) {
-								var char1 = text[idx1];
-								var char2 = text[idx2];
-								text = replaceAt(text, idx1, char2);
-								text = replaceAt(text, idx2, char1);
-								typoCount++;
-								logMsg (`  > Transposition: swapping character '${char1}' at ${idx1} and '${char2}' at ${idx2}`);
-							}
-						}
-						return text;
-					} // transposition()
-				},
 				miskey: {
-					probability: 0.3,
+					probability: 0.1, // 10% chance
 					action: function(text) {
 						if (/[^\s]/.test(text)) {
 							var i1;
@@ -149,8 +126,28 @@ $(function() {
 						return text;
 					} // miskey()
 				},
+				transposition: {
+					probability: 0.6, // 60% chance
+					action: function(text) {
+						if (text.length > 1) {
+							var i1 = Math.min(text.length - 1, Math.max(0, Math.floor(Math.random() * text.length - 1)));
+							var i2 = Math.min(text.length - 1, Math.max(0, i1 + Math.floor(Math.random() * config.velocity * 2) - config.velocity));
+			
+							var idx1 = Math.min(i1, i2);
+							var idx2 = Math.max(i1, i2);
+							if (idx1 != idx2) {
+								var char1 = text[idx1];
+								var char2 = text[idx2];
+								text = replaceAt(text, idx1, char2);
+								text = replaceAt(text, idx2, char1);
+								logMsg(`  > Transposition: swapping character '${char1}' at ${idx1} and '${char2}' at ${idx2}`);
+							}
+						}
+						return text;
+					} // transposition()
+				},
 				extraCharacter: {
-					probability: '*',
+					probability: '*', // take up the slack (impl. 30% chance)
 					action: function(text) {
 						if (/[^\s]/.test(text)) {
 							var i1;
@@ -163,15 +160,44 @@ $(function() {
 							var altChr = altChrs[Math.floor(Math.random() * altChrs.length)];
 							
 							var replacement = (Math.random() < 0.5 ? [chr, altChr] : [altChr, chr]).join('');
-							logMsg(`  > extraCharacter: replacing '${chr}' with '${replacement}' at position ${i1} in "${text}"`);
+							logMsg(`  > extraCharacter: replacing '${chr}' with '${replacement}' at position ${i1}"`);
 							return replaceAt(text, i1, replacement);
 						}
 						return text;
 					} // extraCharacter()
 				}
 			}; // Typos
-			
-			var typesOfTypos = Object.keys(Typos);
+
+			var ptm = [];
+			logMsg('Building typo probability index...');
+			for (var typo in Typos) {
+				if (Typos.hasOwnProperty(typo)) {
+					var t = Typos[typo];
+					t.name = typo;
+					ptm.push(t);
+				}
+			}
+
+			ptm.sort(function(a, b) {
+				return a.probability === '*' ? 1 : (
+					b.probability === '*' ? -1 : (
+						a.probability < b.probability ? -1 : 1
+					)
+				)
+			});
+			logMsg('...done');
+			var randomTypo = function() {
+				var typoSeed = Math.random();
+				var typoIdx = -1;
+				var cumulative = 0;
+
+				do {
+					typoIdx++;
+					cumulative += ptm[typoIdx].probability !== '*' ? ptm[typoIdx].probability : 1;
+				} while (typoIdx < ptm.length && ptm[typoIdx].probability !== '*' && typoSeed > cumulative)
+
+				return ptm[typoIdx];
+			}; // randomTypo()
 			
 			var getNewContent = function(node) {
 				var $node = $(node);
@@ -185,11 +211,9 @@ $(function() {
 						var words = text.split(config.wordSplitRgx);
 						var typosNeeded = Math.ceil(words.length * config.typosPerWord);
 						var typoCount = 0;
-						
+						logMsg(`Analyzing ${words.length} words and generating ${typosNeeded} typos at velocity ${config.velocity}`);
 						do {
-							var doWhat = typesOfTypos[Math.floor(Math.random() * typesOfTypos.length)];
-							var typoFunc = Typos[doWhat].action;
-							//logMsg(`Doing a '${doWhat}' typo on "${text}":`);
+							var typoFunc = randomTypo().action;
 							text = typoFunc(text);
 							typoCount++;
 						} while (typoCount < typosNeeded);

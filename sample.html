@@ -9,11 +9,23 @@
 			$(function() {
 				var $doit = $('#doit');
 				$doit.on('click', function() {
-						console.clear();
+					console.clear();
+					//setInterval(function() {
 						$('.body-copy').simcockify({
+							// Velocity factors
 							FiveHourEnergies: 1,
-							debug: true
+							Espressos: 0,
+							Coffees: 3,
+							
+							// Frequency factors
+							HoursOfSleep: 5,
+							MinutesTalkingToClients: 90,
+							DeadlinesLooming: 2,
+							EmployeesBlocked: 1,
+
+							debug: false
 						});  
+					//}, 1000);
 				});	
 			});
 		</script>
