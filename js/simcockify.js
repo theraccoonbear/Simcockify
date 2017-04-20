@@ -2,7 +2,26 @@
 if (!window) { window = global || {}; }
 
 $(function() {
-	(function($) {		
+	(function($) {
+		// repeatable seeded PRNG shamelessly lifted from: http://stackoverflow.com/a/19301306/7210
+		var m_w = 123456789;
+		var m_z = 987654321;
+		var mask = 0xffffffff;
+
+		// Takes any integer
+		function seed(i) {
+			m_w = i;
+		}
+
+		// Returns number between 0 (inclusive) and 1.0 (exclusive),
+		// just like random().
+		function random() {
+			m_z = (36969 * (m_z & 65535) + (m_z >> 16)) & mask;
+			m_w = (18000 * (m_w & 65535) + (m_w >> 16)) & mask;
+			var result = ((m_z << 16) + m_w) & mask;
+			result /= 4294967296;
+			return result + 0.5;
+		}
 
 		window.KEYBOARD_MAPS = {
 			QWERTY: {
@@ -27,9 +46,10 @@ $(function() {
 		
 		$.fn.simcockify = function(options) {
 			var optDefaults = {
-				Exclude: '.no-simcockify', // exclusion selector 
-				KeyboardType: window.KEYBOARD_MAPS.QWERTY, // physical keyboard layout
+				exclude: '.no-simcockify', // exclusion selector 
+				keyboardType: window.KEYBOARD_MAPS.QWERTY, // physical keyboard layout
 				debug: false, // dribble out activity messages?
+				seed: Math.random(), // seed the repeatable RNG
 
 				// Velocity factors
 				FiveHourEnergies: 0,
@@ -45,6 +65,8 @@ $(function() {
 	
 			var opts = $.extend({}, optDefaults, options);
 	
+			seed(opts.seed);
+
 			var typoFrequencyFactor = (
 				(Math.abs(opts.HoursOfSleep - 8) / 8) +
 				(opts.DeadlinesLooming / 20) +
@@ -116,13 +138,15 @@ $(function() {
 							var i1;
 							var attemptCnt = 0;
 							do {
-								i1 = Math.min(text.length - 1, Math.max(0, Math.floor(Math.random() * text.length - 1)));
+								i1 = Math.min(text.length - 1, Math.max(0, Math.floor(random() * text.length - 1)));
 							} while (/\s/.test(text[i1]) && ++attemptCnt < 10);
 							var chr = text[i1];
-							var altChrs = accessibleKeys(chr, opts.KeyboardType, config.velocity);
-							var altChr = altChrs[Math.floor(Math.random() * altChrs.length)];
-							logMsg(`  > Miskey: replacing '${chr}' with '${altChr}' at position ${i1} in "${text}"`);
+							var altChrs = accessibleKeys(chr, opts.keyboardType, config.velocity);
+							var altChr = altChrs[Math.floor(random() * altChrs.length)];
+							logMsg(`  > Miskey: replacing '${chr}' with '${altChr}' at position ${i1}`);
 							return replaceAt(text, i1, altChr);
+						} else {
+							logMsg('miss');
 						}
 						return text;
 					} // miskey()
@@ -131,8 +155,8 @@ $(function() {
 					probability: 0.85, // 85% chance
 					action: function(text) {
 						if (text.length > 1) {
-							var i1 = Math.min(text.length - 1, Math.max(0, Math.floor(Math.random() * text.length - 1)));
-							var i2 = Math.min(text.length - 1, Math.max(0, i1 + Math.floor(Math.random() * config.velocity * 2) - config.velocity));
+							var i1 = Math.min(text.length - 1, Math.max(0, Math.floor(random() * text.length - 1)));
+							var i2 = Math.min(text.length - 1, Math.max(0, i1 + Math.floor(random() * config.velocity * 2) - config.velocity));
 			
 							var idx1 = Math.min(i1, i2);
 							var idx2 = Math.max(i1, i2);
@@ -143,6 +167,8 @@ $(function() {
 								text = replaceAt(text, idx2, char1);
 								logMsg(`  > Transposition: swapping character '${char1}' at ${idx1} and '${char2}' at ${idx2}`);
 							}
+						} else {
+							logMsg('miss');
 						}
 						return text;
 					} // transposition()
@@ -154,15 +180,17 @@ $(function() {
 							var i1;
 							var attemptCnt = 0;
 							do {
-								i1 = Math.min(text.length - 1, Math.max(0, Math.floor(Math.random() * text.length - 1)));
+								i1 = Math.min(text.length - 1, Math.max(0, Math.floor(random() * text.length - 1)));
 							} while (/\s/.test(text[i1]) && ++attemptCnt < 10);
 							var chr = text[i1];
-							var altChrs = accessibleKeys(chr, opts.KeyboardType, config.velocity);
-							var altChr = altChrs[Math.floor(Math.random() * altChrs.length)];
+							var altChrs = accessibleKeys(chr, opts.keyboardType, config.velocity);
+							var altChr = altChrs[Math.floor(random() * altChrs.length)];
 							
-							var replacement = (Math.random() < 0.5 ? [chr, altChr] : [altChr, chr]).join('');
+							var replacement = (random() < 0.5 ? [chr, altChr] : [altChr, chr]).join('');
 							logMsg(`  > extraCharacter: replacing '${chr}' with '${replacement}' at position ${i1}"`);
 							return replaceAt(text, i1, replacement);
+						} else {
+							logMsg('miss');
 						}
 						return text;
 					} // extraCharacter()
@@ -188,7 +216,7 @@ $(function() {
 			});
 			logMsg('...done');
 			var randomTypo = function() {
-				var typoSeed = Math.random();
+				var typoSeed = random();
 				var typoIdx = -1;
 				var cumulative = 0;
 
@@ -212,19 +240,17 @@ $(function() {
 						var words = text.split(config.wordSplitRgx);
 						var typosNeeded = Math.ceil(words.length * config.typosPerWord);
 						var typoCount = 0;
-						logMsg(`Analyzing ${words.length} words and generating ${typosNeeded} typos at velocity ${config.velocity}`);
-						//do {
+						logMsg(`Inspecting ${words.length} word(s) and generating ${typosNeeded} typo(s) at velocity ${config.velocity}`);
 						for (var typoCount = 0; typoCount < typosNeeded; typoCount++) {
 							var typoFunc = randomTypo().action;
 							text = typoFunc(text);
-							typoCount++;
 						}
-						logMsg(`Inserted ${typoCount} typos`);
+						logMsg(`Inserted ${typoCount} typo(s)`);
 						logMsg('-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-=-');
 					}
 					nodeContent.push(text);
 				} else {
-					var exclude = $node.is(opts.Exclude);
+					var exclude = $node.is(opts.exclude);
 					if (exclude) {
 						nodeContent.push($node.outerHTML());
 					} else {
@@ -239,7 +265,7 @@ $(function() {
 				}
 				return nodeContent.join(' ');
 			};
-			var $this = $(this).not(opts.Exclude);
+			var $this = $(this).not(opts.exclude);
 			var cont = getNewContent(this);
 			$this.replaceWith(cont);
 		};
