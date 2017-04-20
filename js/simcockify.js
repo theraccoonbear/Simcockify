@@ -49,7 +49,7 @@ $(function() {
 				exclude: '.no-simcockify', // exclusion selector 
 				keyboardType: window.KEYBOARD_MAPS.QWERTY, // physical keyboard layout
 				debug: false, // dribble out activity messages?
-				seed: Math.random(), // seed the repeatable RNG
+				seed: Math.random(), // seed the repeatable PRNG
 
 				// Velocity factors
 				FiveHourEnergies: 0,
