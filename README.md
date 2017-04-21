@@ -3,6 +3,9 @@
 A jQuery plugin to make your copy all simcocked up
 
 ```javascript
+
+$.seedPRNG('repeatable-seed-abc-123');
+
 $('.body-copy').simcockify({
 	// Velocity factors
 	FiveHourEnergies: 0,

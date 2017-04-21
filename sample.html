@@ -13,47 +13,75 @@
 		<script src="js/simcockify.jquery.js"></script>
     <script>
 			$(function() {
-				var $doit = $('#doit');
-				var $reset = $('#reset');
+				$('[id]').each(function(i, e) {
+					var $e = $(e);
+					window['$' + $e.attr('id')] = $e;
+				});
+
 				var $body_copy = $('.body-copy');
 				
 				var originalContent = $body_copy.html();
+
+				$.seedPRNG($seedValue.val());
 
 				$doit.on('click', function() {
 					console.clear();
 					$body_copy.simcockify({
 						// Velocity factors
-						FiveHourEnergies: 0,
-						Espressos: 0,
-						Coffees: 2,
+						FiveHourEnergies: $FiveHourEnergies.val(),
+						Espressos: $Espressos.val(),
+						Coffees: $Coffees.val(),
 						
 						// Frequency factors
-						HoursOfSleep: 8,
-						MinutesTalkingToClients: 90,
-						DeadlinesLooming: 2,
-						EmployeesBlocked: 1,
+						HoursOfSleep: $HoursOfSleep.val(),
+						MinutesTalkingToClients: $MinutesTalkingToClients.val(),
+						DeadlinesLooming: $DeadlinesLooming.val(),
+						EmployeesBlocked: $EmployeesBlocked.val(),
 
 						debug: true,
-						seed: 'repeatable-seed-zy1231'
 					});
 				});
 
 				$reset.on('click', function() {
 					$body_copy.html(originalContent);
 				});
+
+				$reseed.on('click', function() {
+					$.seedPRNG($seedValue.val());
+				});
 			});
 		</script>
   </head>
   <body>
 		<div class="container">
-			
+			<div class="page-header">
+				<h1>Simcockify</h1>
+			</div>
+
 			
 			<div class="row">
-				<div class="col-md-4 col-sm-12">
+				
+				<div class="col-md-3 col-sm-4 col-xs-6">
+					<h3>Set Properties</h3>
+					<fieldset>
+						<label for="Coffees">Coffees <input type="number" class="form-control" step="1" id="Coffees" value="2"></label><br>
+						<label for="Espressos">Espressos <input type="number" class="form-control" step="1" id="Espressos" value="0"></label><br>
+						<label for="FiveHourEnergies">FiveHourEnergies <input type="number" class="form-control" step="1" id="FiveHourEnergies" value="1"></label><br>
+						<label for="HoursOfSleep">HoursOfSleep <input type="number" class="form-control" step="1" id="HoursOfSleep" value="8"></label><br>
+						<label for="MinutesTalkingToClients">MinutesTalkingToClients <input type="number" class="form-control" step="1" id="MinutesTalkingToClients" value="90"></label><br>
+						<label for="DeadlinesLooming">DeadlinesLooming <input type="number" class="form-control" step="1" id="DeadlinesLooming" value="2"></label><br>
+						<label for="EmployeesBlocked">EmployeesBlocked <input type="number" class="form-control" step="1" id="EmployeesBlocked" value="1"></label><br>
+						<button class="btn btn-md btn-primary" id="doit">Simcockify</button>
+						<button class="btn btn-md btn-secondary" id="reset">Reset</button>
+					</fieldset>
+					<h3>Seed</h3>
+					<fieldset>
+						<label for="seedValue">SeedValue <input type="text" class="form-control" id="seedValue" value="'repeatable-seed-abc-123'"></label><br>
+						<button class="btn btn-md btn-primary" id="reseed">Reseed</button>
+					</fieldset>
 				</div>
-				<div class="col-md-8 col-sm-12">
-					<button class="btn btn-md btn-primary" id="doit">Simcockify</button>
-					<button class="btn btn-md btn-secondary" id="reset">Reset</button>
+				<div class="col-md-9 col-sm-8 col-xs-6">
+					
 
 					<div class="body-copy">
 						<p>Jeepers harmful broad under a outside therefore <strong>badger sarcastic some ahead frequent</strong> peered wove stung that much as wrote fatuous shrank anteater guinea.</p>
