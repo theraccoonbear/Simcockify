@@ -1,4 +1,4 @@
-# Simcockify
+# Simcockify ZZZ
 
 A jQuery plugin to make your copy all simcocked up
 
