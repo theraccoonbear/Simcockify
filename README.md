@@ -1,9 +1,11 @@
 # Simcockify
 
-A jQuery plugin to make your copy all simcocked up
+A jQuery plugin to make your copy all Simcocked up.
 
+## Basic Usage
 ```javascript
 
+// Optional, but allows for repeatability...
 $.seedPRNG('repeatable-seed-abc-123');
 
 $('.body-copy').simcockify({
@@ -22,3 +24,11 @@ $('.body-copy').simcockify({
 	seed: 'repeatable-seed-zy1231'
 });
 ```
+
+## Sandbox
+
+Try out [Simcockify here](https://theraccoonbear.github.io/Simcockify/sample.html)
+
+## Write up
+
+A [little background](https://earthlinginteractive.com/blog/item/simcockify-a-typo-generator-plugin) on the impetus for the plugin.
