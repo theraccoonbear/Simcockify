@@ -31,4 +31,4 @@ Try out [Simcockify here](https://theraccoonbear.github.io/Simcockify/sample.htm
 
 ## Write up
 
-A [little background](https://earthlinginteractive.com/blog/item/simcockify-a-typo-generator-plugin) on the impetus for the plugin.
+A [little background](https://earthlinginteractive.com/blog/item/simcockify-a-typo-generator-plugin) on the impetus for the plugin and the overwrought design.
