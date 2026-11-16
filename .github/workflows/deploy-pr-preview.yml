@@ -1,0 +1,71 @@
+name: Deploy PR preview
+
+# Each open PR gets a live preview at gh-pages/pr-<N>/, next to the
+# production site at the gh-pages root (deploy-pages.yml). Closing the PR
+# removes the preview. Fork PRs are skipped: their token is read-only.
+# Publishing lives in .github/scripts/publish-gh-pages.sh.
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, closed]
+
+permissions:
+  contents: write
+  pull-requests: write
+
+# Shared with deploy-pages.yml so gh-pages writes never race.
+concurrency:
+  group: gh-pages-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    if: >-
+      github.event.action != 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Build
+        run: npm run build
+      - name: Run tests
+        run: npm test
+      - name: Assemble site
+        run: node scripts/build-site.mjs
+      - name: Publish preview
+        run: .github/scripts/publish-gh-pages.sh preview site "${PR_NUMBER}" "Deploy preview for PR #${PR_NUMBER}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: pr-preview
+          message: |
+            Preview deployed: https://theraccoonbear.github.io/Simcockify/pr-${{ github.event.pull_request.number }}/
+
+            Updates on every push to this PR.
+
+  cleanup:
+    if: >-
+      github.event.action == 'closed' &&
+      github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      # The checkout supplies the publish script from the PR base branch.
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.base.ref }}
+      - name: Remove preview
+        run: .github/scripts/publish-gh-pages.sh remove "${PR_NUMBER}" "Remove preview for closed PR #${PR_NUMBER}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+      - uses: marocchino/sticky-pull-request-comment@v2
+        with:
+          header: pr-preview
+          message: Preview removed (PR closed).

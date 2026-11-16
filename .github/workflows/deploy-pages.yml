@@ -3,7 +3,8 @@ name: Deploy live demo to GitHub Pages
 # Mirrors theraccoonbear/logician and theraccoonbear/exprforge: the site is
 # published to the gh-pages branch, and Settings -> Pages -> Source stays
 # "Deploy from a branch" (gh-pages, /root). Site assembly lives in
-# scripts/build-site.mjs.
+# scripts/build-site.mjs; publishing lives in
+# .github/scripts/publish-gh-pages.sh, shared with deploy-pr-preview.yml.
 on:
   push:
     branches: [master]
@@ -13,7 +14,7 @@ permissions:
   contents: write
 
 concurrency:
-  group: gh-pages-deploy
+  group: gh-pages-deploy # shared with deploy-pr-preview.yml
   cancel-in-progress: false
 
 jobs:
@@ -32,8 +33,7 @@ jobs:
         run: npm test
       - name: Assemble site
         run: node scripts/build-site.mjs
-      - uses: peaceiris/actions-gh-pages@v4
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: site
-          keep_files: true
+      - name: Publish site (replaces root, keeps pr-*/ previews)
+        run: .github/scripts/publish-gh-pages.sh root site "Deploy site from ${GITHUB_SHA}"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
