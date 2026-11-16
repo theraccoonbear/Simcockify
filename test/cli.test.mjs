@@ -91,3 +91,21 @@ test('--engine classic reproduces the 1.x output; word is the default', () => {
 	assert.match(bad.stderr, /engine must be one of: word, classic/);
 	assert.match(cli(['--help'], '').stdout, /--engine <name>/);
 });
+
+test('--weights and config typoWeights; flags merge over config per key', () => {
+	const w = '{"duplicate":5,"slip":0}';
+	const r = cli(['--seed', 'w', '--deadlines-looming', '20', '--weights', w]);
+	assert.equal(r.status, 0);
+	assert.equal(r.stdout, simcockify(TEXT, { seed: 'w', DeadlinesLooming: 20, typoWeights: { duplicate: 5, slip: 0 } }));
+	const p = config({ seed: 'w', DeadlinesLooming: 20, typoWeights: { duplicate: 5, transpose: 0 } });
+	assert.equal(
+		cli(['--config', p, '--weights', '{"duplicate":1}']).stdout,
+		simcockify(TEXT, { seed: 'w', DeadlinesLooming: 20, typoWeights: { duplicate: 1, transpose: 0 } }),
+	);
+	for (const bad of ['{nope', '{"bogus":1}', '{"slip":-1}', '[1]', '{"slip":"x"}']) {
+		const e = cli(['--weights', bad]);
+		assert.equal(e.status, 2, bad);
+		assert.match(e.stderr, /^simcockify: /);
+	}
+	assert.equal(cli(['--config', config({ typoWeights: 3 })]).status, 2);
+});

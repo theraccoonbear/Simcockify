@@ -1,5 +1,22 @@
 import { KEYBOARD_MAPS, KeyboardMap } from './keyboard.js';
 
+/** Mistake types the word engine can make. */
+export const TYPO_TYPES = [
+	'slip',
+	'transpose',
+	'double',
+	'drop',
+	'insert',
+	'apostrophe',
+	'homophone',
+	'duplicate',
+	'stickyShift',
+	'sentenceEnd',
+] as const;
+
+export type TypoType = (typeof TYPO_TYPES)[number];
+export type TypoWeights = Partial<Record<TypoType, number>>;
+
 export const ENGINES = ['word', 'classic'] as const;
 export type Engine = (typeof ENGINES)[number];
 
@@ -8,6 +25,8 @@ export interface SimcockifyOptions {
 	seed?: number | string;
 	/** `'word'` (default) or `'classic'` (the 1.x algorithm, reproducing old seeds exactly). */
 	engine?: Engine;
+	/** Relative weights of the mistake types (word engine only); merged over the defaults. */
+	typoWeights?: TypoWeights;
 	/** Physical keyboard layout used to pick neighbouring keys. */
 	keyboardType?: KeyboardMap;
 	/** Log activity messages. */
@@ -30,6 +49,24 @@ export interface SimcockifyOptions {
 	DeadlinesLooming?: number;
 	EmployeesBlocked?: number;
 }
+
+/**
+ * Default relative weights. `sentenceEnd` is not chosen per word: it is the
+ * chance of a sentence end being botched relative to a word getting a typo
+ * (1 means the same chance, capped at 1).
+ */
+export const DEFAULT_TYPO_WEIGHTS: Readonly<Record<TypoType, number>> = {
+	slip: 4,
+	transpose: 3,
+	double: 1.5,
+	drop: 2,
+	insert: 2,
+	apostrophe: 2,
+	homophone: 3,
+	duplicate: 0.5,
+	stickyShift: 1,
+	sentenceEnd: 0.5,
+};
 
 export const DEFAULT_OPTIONS = {
 	exclude: '.no-simcockify',

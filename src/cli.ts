@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { simcockify } from './core.js';
 import { KEYBOARD_MAPS } from './keyboard.js';
-import { Engine, ENGINES, NUMERIC_OPTIONS, SimcockifyOptions } from './options.js';
+import { Engine, ENGINES, NUMERIC_OPTIONS, SimcockifyOptions, TYPO_TYPES, TypoWeights } from './options.js';
 
 const FLAGS: Record<(typeof NUMERIC_OPTIONS)[number], string> = {
 	FiveHourEnergies: 'five-hour-energies',
@@ -34,13 +34,15 @@ Other:
   --keyboard <name>                keyboard layout: ${Object.keys(KEYBOARD_MAPS).join(', ')} (default QWERTY)
   --engine <name>                  typo algorithm: ${ENGINES.join(', ')} (default ${ENGINES[0]});
                                    classic is the 1.x algorithm, so old seeds reproduce
+  --weights <json>                 relative typo weights (word engine), e.g. '{"transpose":3,"homophone":0}'
+                                   types: ${TYPO_TYPES.join(', ')}
   --debug                          log activity to stderr
   --config <path.json>             read options from a JSON file; flags override it
   -h, --help                       show this help
   -v, --version                    show the version
 
 Config files use the option names: ${NUMERIC_OPTIONS.join(', ')},
-seed, keyboard, debug, engine.
+seed, keyboard, debug, engine, typoWeights (an object of typo weights).
 `;
 
 export class UsageError extends Error {}
@@ -88,6 +90,30 @@ function loadConfig(path: string): Record<string, unknown> {
 	return parsed as Record<string, unknown>;
 }
 
+function weightsFrom(name: string, value: unknown): TypoWeights {
+	if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+		throw new UsageError(`${name} must be an object of typo weights`);
+	}
+	const out: TypoWeights = {};
+	for (const [k, v] of Object.entries(value)) {
+		if (!(TYPO_TYPES as readonly string[]).includes(k)) {
+			throw new UsageError(`${name} key "${k}" must be one of: ${TYPO_TYPES.join(', ')}`);
+		}
+		const n = toNumber(`${name}.${k}`, v);
+		if (n < 0) throw new UsageError(`${name}.${k} must be >= 0`);
+		out[k as keyof TypoWeights] = n;
+	}
+	return out;
+}
+
+function parseWeightsFlag(raw: string): unknown {
+	try {
+		return JSON.parse(raw);
+	} catch (e) {
+		throw new UsageError(`--weights is not valid JSON: ${(e as Error).message}`);
+	}
+}
+
 function applyValues(opts: SimcockifyOptions, values: Record<string, unknown>, source: string): void {
 	for (const [key, value] of Object.entries(values)) {
 		if ((NUMERIC_OPTIONS as readonly string[]).includes(key)) {
@@ -110,6 +136,9 @@ function applyValues(opts: SimcockifyOptions, values: Record<string, unknown>, s
 				throw new UsageError(`${source}engine must be one of: ${ENGINES.join(', ')}`);
 			}
 			opts.engine = value as Engine;
+		} else if (key === 'typoWeights') {
+			// Merged key by key, so --weights adjusts the config file's weights.
+			opts.typoWeights = { ...opts.typoWeights, ...weightsFrom(`${source}typoWeights`, value) };
 		} else {
 			throw new UsageError(`unknown option ${source}${key}`);
 		}
@@ -127,6 +156,7 @@ export function run(argv: string[], io: CliIO): number {
 			keyboard: { type: 'string' },
 			debug: { type: 'boolean' },
 			engine: { type: 'string' },
+			weights: { type: 'string' },
 		};
 		for (const flag of Object.values(FLAGS)) options[flag] = { type: 'string' };
 
@@ -154,6 +184,7 @@ export function run(argv: string[], io: CliIO): number {
 		if (values.keyboard !== undefined) fromFlags.keyboard = values.keyboard;
 		if (values.debug) fromFlags.debug = true;
 		if (values.engine !== undefined) fromFlags.engine = values.engine;
+		if (typeof values.weights === 'string') fromFlags.typoWeights = parseWeightsFlag(values.weights);
 		applyValues(opts, fromFlags, '--');
 
 		if (opts.debug) opts.logger = (m) => io.stderr(m + '\n');

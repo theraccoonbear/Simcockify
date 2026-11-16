@@ -5,7 +5,10 @@ import { simcockify, simcockifySegments, createSimcockifier, nearbyKeys, KEYBOAR
 const QWERTY = KEYBOARD_MAPS.QWERTY;
 const PROSE =
 	'Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition. Organically grow the holistic world view of disruptive innovation via workplace diversity and empowerment.';
-const HEAVY = { DeadlinesLooming: 20, EmployeesBlocked: 15 }; // 0.5 typos per word
+// 0.5 typos per word, limited to the letter-level types these tests are about
+// (word-level types such as duplicate and homophone are tested in features.test.mjs).
+const LETTER_TYPES = { slip: 4, transpose: 3, insert: 2, double: 0, drop: 0, apostrophe: 0, homophone: 0, duplicate: 0, stickyShift: 0, sentenceEnd: 0 };
+const HEAVY = { DeadlinesLooming: 20, EmployeesBlocked: 15, typoWeights: LETTER_TYPES };
 const detailed = (text, o) => simcockifySegments([text], o)[0];
 
 /** Changes made by exactly one mistake of `type`, gathered over many seeds. */
@@ -155,7 +158,7 @@ test('[tokens] URLs, emails, numbers, handles, tags and code-ish tokens are neve
 	for (let seed = 0; seed < 20; seed++) assert.equal(simcockify(protectedText, { seed, ...HEAVY }), protectedText);
 });
 
-test('[tokens] very short words are left alone', () => {
+test('[tokens] very short words get no letter-level typos', () => {
 	const t = 'I am at it so we go by on up to do no';
 	for (let seed = 0; seed < 20; seed++) assert.equal(simcockify(t, { seed, ...HEAVY }), t);
 });
