@@ -1,12 +1,12 @@
 import { KEYBOARD_MAPS, KeyboardMap } from './keyboard.js';
 
-export const ENGINES = ['classic'] as const;
+export const ENGINES = ['word', 'classic'] as const;
 export type Engine = (typeof ENGINES)[number];
 
 export interface SimcockifyOptions {
 	/** Seed for the PRNG; the same seed and options give the same output. Random if omitted. */
 	seed?: number | string;
-	/** Typo algorithm. `'classic'` is the 1.x algorithm and reproduces old seeds exactly. */
+	/** `'word'` (default) or `'classic'` (the 1.x algorithm, reproducing old seeds exactly). */
 	engine?: Engine;
 	/** Physical keyboard layout used to pick neighbouring keys. */
 	keyboardType?: KeyboardMap;
@@ -35,7 +35,7 @@ export const DEFAULT_OPTIONS = {
 	exclude: '.no-simcockify',
 	keyboardType: KEYBOARD_MAPS.QWERTY,
 	debug: false,
-	engine: 'classic' as Engine,
+	engine: 'word' as Engine,
 	FiveHourEnergies: 0,
 	Espressos: 0,
 	Coffees: 0,

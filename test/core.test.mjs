@@ -30,20 +30,26 @@ test('PRNG yields values in [0, 1) and is repeatable', () => {
 	}
 });
 
-test('known output for a fixed seed (regression)', () => {
+test('classic engine: known output for a fixed seed (regression)', () => {
 	assert.equal(
 		simcockify('The quick brown fox jumps over the lazy dog, repeatedly and with feeling.', {
 			seed: 'abc',
 			Coffees: 5,
 			HoursOfSleep: 4,
+			engine: 'classic',
 		}),
 		'The quick brown fjx oumps over the lazy dog, peeratedly and with feeling.',
 	);
 });
 
-test('neutral factors still produce a few typos (original defaults)', () => {
+test('classic engine: neutral factors still produce a few typos (original defaults)', () => {
 	// Coffees defaults to 0, which is off-neutral, so the 0.5 term applies.
-	assert.notEqual(simcockify(TEXT, { seed: 1 }), TEXT);
+	assert.notEqual(simcockify(TEXT, { seed: 1, engine: 'classic' }), TEXT);
+});
+
+test('word engine: default factors give a light rate (0.1 per word), so most seeds change something in long text', () => {
+	const changed = [1, 2, 3, 4, 5].filter((seed) => simcockify(TEXT.repeat(3), { seed }) !== TEXT.repeat(3));
+	assert.ok(changed.length >= 4, `changed for seeds ${changed}`);
 });
 
 test('fully neutral settings produce no typos', () => {
