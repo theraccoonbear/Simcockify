@@ -116,8 +116,10 @@ Options are layered lowest first with plain object spreads. In the library:
 In the CLI:
 
 ```ts
-{ ...DEFAULT_OPTIONS, ...PERSONAS[persona].options, ...configFile, ...flags }
+{ ...DEFAULT_OPTIONS, ...PERSONAS[persona].options, ...configFile, ...shorthand, ...flags }
 ```
+
+where `shorthand` is the [CLI shorthand](#cli-shorthand) spec.
 
 Both go through the exported `layerOptions(...layers)`. Two details: a key set to `undefined` does not override a lower layer, and `typoWeights` is layered per key in the same order, so `{ persona: 'post-launch', typoWeights: { double: 0 } }` keeps the persona's other weights.
 
@@ -212,10 +214,13 @@ With a module bundler: `import { install } from 'simcockify/jquery'; install($);
 
 ## CLI
 
-Reads stdin, writes stdout.
+Reads a file named on the command line, or stdin when there is none, and writes stdout.
 
 ```sh
 echo "Please review the attached proposal before Friday." | npx simcockify --seed 42 --coffees 4
+cat my-document.md | npx simcockify fhe:3,eb:8 > human-document.md   # shorthand, see below
+npx simcockify s:42,p:client-call notes.txt > notes-typos.txt          # read a file
+cat /etc/motd | npx simcockify                                         # defaults
 cat draft.md | npx simcockify --seed 42 --deadlines-looming 6 --hours-of-sleep 4 > draft-typos.md
 cat draft.md | npx simcockify --seed 42 --persona friday-afternoon --reveal    # see what changed
 cat draft.md | npx simcockify --seed 42 --fatigue 0.8 --weights '{"homophone":6}' --reveal json
@@ -244,7 +249,44 @@ npx simcockify --config tired.json --seed 7 < in.txt
 | `--config <path.json>` | read options from a JSON file |
 | `-h, --help`, `-v, --version` | |
 
-A config file uses the option names, e.g. `{ "seed": "abc", "persona": "client-call", "Coffees": 4, "fatigue": 0.5, "typoWeights": { "duplicate": 0 }, "reveal": "ansi" }`. Flags override config values, and config values override the persona (see [Option layering](#option-layering)). Invalid flags, values or config files print a message to stderr and exit non-zero (2 for usage errors).
+### CLI shorthand
+
+A positional `key:value,key:value` argument sets options without the long flags:
+
+| Key | Option | Key | Option |
+| --- | --- | --- | --- |
+| `c` | `Coffees` | `e` | `Espressos` |
+| `fhe` | `FiveHourEnergies` | `hos` | `HoursOfSleep` |
+| `mtc` | `MinutesTalkingToClients` | `dl` | `DeadlinesLooming` |
+| `eb` | `EmployeesBlocked` | `s` | `seed` |
+| `f` | `fatigue` | `p` | `persona` |
+
+Full option names work as keys too, in any case (`coffees:3`, `FiveHourEnergies:1`), as do the flag names (`deadlines-looming:4`) and `engine`, `reveal` and `keyboard`. Values are checked like the matching flag. Within a spec, a later key wins. The spec sits between the config file and the flags (see [Option layering](#option-layering)), so `--config tired.json dl:1 --seed 7` takes `DeadlinesLooming` from the spec and the seed from the flag.
+
+```sh
+$ T="Please review the attached proposal before Friday and send feedback to the whole team."
+$ echo "$T" | npx simcockify fhe:3,eb:8,s:demo
+Please review the attwched proposal before FFriday and send feedback to the whole team.
+$ echo "$T" | npx simcockify --seed demo --five-hour-energies 3 --employees-blocked 8
+Please review the attwched proposal before FFriday and send feedback to the whole team.
+$ echo "$T" | npx simcockify s:demo,p:post-launch
+Please review te attached proposal before Friay and send feedback to the whole team.
+$ echo "$T" > draft.md; npx simcockify s:demo,dl:20,eb:15 draft.md
+Olease rview the attached proposal befre Friday and send feebdack to the the whole team.
+$ echo "$T" | npx simcockify fhw:3
+simcockify: unknown shorthand key "fhw"; did you mean "fhe" (FiveHourEnergies)?
+Try 'simcockify --help'.
+```
+
+Each positional argument is taken as:
+
+1. a shorthand spec, if it matches `/^[a-z][\w-]*:[^,]*(,[a-z][\w-]*:[^,]*)*$/i`;
+2. otherwise the input file, if a file by that name exists (`-` means stdin);
+3. otherwise an error.
+
+So a spec always wins over a file with the same name. At most one input file can be given; with none, input comes from stdin. Unknown keys are usage errors with the closest key suggested.
+
+A config file uses the option names, e.g. `{ "seed": "abc", "persona": "client-call", "Coffees": 4, "fatigue": 0.5, "typoWeights": { "duplicate": 0 }, "reveal": "ansi" }`. Flags override shorthand values, shorthand values override config values, and config values override the persona (see [Option layering](#option-layering)). Invalid flags, values or config files print a message to stderr and exit non-zero (2 for usage errors).
 
 ## Claude Code skill
 
