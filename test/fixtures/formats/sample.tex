@@ -1,0 +1,52 @@
+\documentclass[11pt,a4paper]{article}
+\usepackage[utf8]{inputenc}
+\usepackage{graphicx,hyperref}
+\newcommand{\project}[1]{\textbf{Project #1}}
+
+\title{Quarterly planning notes}
+\author{Platform team}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}\label{sec:introduction}
+Please review the attached proposal before Friday and send feedback to the whole team, as discussed in Section~\ref{sec:results} and by \citet[p.~4]{smith2020planning}.
+The energy relation $E = mc^2$ holds, and so does \(a^2 + b^2 = c^2\). % reviewers should check this comment
+Prices are quoted in dollars, for example \$40 per seat.
+
+\begin{equation}
+  \label{eq:growth}
+  growth = \frac{revenue_{new} - revenue_{old}}{revenue_{old}}
+\end{equation}
+
+\begin{align*}
+  total &= base + bonus \\
+  bonus &= rate \times hours
+\end{align*}
+
+$$ average = \frac{sum}{count} $$
+\[ variance = expected - mean \]
+
+\begin{figure}[htbp]
+  \centering
+  \includegraphics[width=0.8\textwidth]{figures/roadmap-overview.png}
+  \caption{Roadmap overview for the coming quarter}
+  \label{fig:roadmap}
+\end{figure}
+
+\begin{verbatim}
+verbatim text that must stay exactly as written
+\end{verbatim}
+
+\begin{lstlisting}[language=Python]
+print("please do not change this string")
+\end{lstlisting}
+
+See \url{https://example.com/docs/proposal} and \href{https://example.com/status}{the status page} for details; use \verb|npm run release| to ship.
+
+\begin{tabular}{|l|c|}
+  Component & Owner \\
+  Scheduler & Operations \\
+\end{tabular}
+
+\end{document}
