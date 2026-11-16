@@ -91,3 +91,78 @@ test('--engine classic reproduces the 1.x output; word is the default', () => {
 	assert.match(bad.stderr, /engine must be one of: word, classic/);
 	assert.match(cli(['--help'], '').stdout, /--engine <name>/);
 });
+
+test('--weights and config typoWeights; flags merge over config per key', () => {
+	const w = '{"duplicate":5,"slip":0}';
+	const r = cli(['--seed', 'w', '--deadlines-looming', '20', '--weights', w]);
+	assert.equal(r.status, 0);
+	assert.equal(r.stdout, simcockify(TEXT, { seed: 'w', DeadlinesLooming: 20, typoWeights: { duplicate: 5, slip: 0 } }));
+	const p = config({ seed: 'w', DeadlinesLooming: 20, typoWeights: { duplicate: 5, transpose: 0 } });
+	assert.equal(
+		cli(['--config', p, '--weights', '{"duplicate":1}']).stdout,
+		simcockify(TEXT, { seed: 'w', DeadlinesLooming: 20, typoWeights: { duplicate: 1, transpose: 0 } }),
+	);
+	for (const bad of ['{nope', '{"bogus":1}', '{"slip":-1}', '[1]', '{"slip":"x"}']) {
+		const e = cli(['--weights', bad]);
+		assert.equal(e.status, 2, bad);
+		assert.match(e.stderr, /^simcockify: /);
+	}
+	assert.equal(cli(['--config', config({ typoWeights: 3 })]).status, 2);
+});
+
+test('--fatigue and config fatigue', () => {
+	const long = TEXT.repeat(20);
+	const r = cli(['--seed', 'f', '--deadlines-looming', '8', '--fatigue', '0.7'], long);
+	assert.equal(r.status, 0);
+	assert.equal(r.stdout, simcockify(long, { seed: 'f', DeadlinesLooming: 8, fatigue: 0.7 }));
+	assert.equal(cli(['--config', config({ seed: 'f', DeadlinesLooming: 8, fatigue: 0.7 })], long).stdout, r.stdout);
+	for (const bad of ['2', '-1.5', 'tired']) assert.equal(cli(['--fatigue', bad]).status, 2, bad);
+});
+
+test('--persona and --list-personas; precedence is flags, then config, then persona', async () => {
+	const { PERSONAS } = await import('../dist/index.js');
+	const list = cli(['--list-personas'], '');
+	assert.equal(list.status, 0);
+	for (const name of Object.keys(PERSONAS)) assert.match(list.stdout, new RegExp(`^${name}$`, 'm'));
+	assert.match(list.stdout, /rate \d\.\d\d\/word/);
+
+	const r = cli(['--seed', 'p', '--persona', 'post-launch']);
+	assert.equal(r.status, 0);
+	assert.equal(r.stdout, simcockify(TEXT, { seed: 'p', persona: 'post-launch' }));
+	// Config overrides persona; flags override config.
+	const p = config({ seed: 'p', persona: 'post-launch', HoursOfSleep: 8, typoWeights: { double: 0 } });
+	assert.equal(
+		cli(['--config', p]).stdout,
+		simcockify(TEXT, { seed: 'p', persona: 'post-launch', HoursOfSleep: 8, typoWeights: { double: 0 } }),
+	);
+	assert.equal(
+		cli(['--config', p, '--hours-of-sleep', '2', '--weights', '{"insert":0}']).stdout,
+		simcockify(TEXT, { seed: 'p', persona: 'post-launch', HoursOfSleep: 2, typoWeights: { double: 0, insert: 0 } }),
+	);
+	// A persona flag replaces the config file's persona; config values still override it.
+	assert.equal(
+		cli(['--config', p, '--persona', 'caffeinated']).stdout,
+		simcockify(TEXT, { seed: 'p', persona: 'caffeinated', HoursOfSleep: 8, typoWeights: { double: 0 } }),
+	);
+	const bad = cli(['--persona', 'nobody']);
+	assert.equal(bad.status, 2);
+	assert.match(bad.stderr, /persona must be one of: well-rested/);
+	assert.match(cli(['--help'], '').stdout, /--list-personas/);
+});
+
+test('--reveal [html|ansi|json]; bare --reveal is ansi; config reveal', async () => {
+	const { simcockifyDetailed } = await import('../dist/index.js');
+	const o = { seed: 'r', DeadlinesLooming: 20, EmployeesBlocked: 15 };
+	const args = ['--seed', 'r', '--deadlines-looming', '20', '--employees-blocked', '15'];
+	for (const mode of ['html', 'ansi', 'json']) {
+		const r = cli([...args, '--reveal', mode]);
+		assert.equal(r.status, 0, mode);
+		assert.equal(r.stdout, simcockify(TEXT, { ...o, reveal: mode }), mode);
+	}
+	assert.equal(cli([...args, '--reveal']).stdout, simcockify(TEXT, { ...o, reveal: 'ansi' }));
+	assert.equal(cli(['--reveal', ...args]).stdout, simcockify(TEXT, { ...o, reveal: 'ansi' }));
+	assert.deepEqual(JSON.parse(cli([...args, '--reveal', 'json']).stdout), simcockifyDetailed(TEXT, o));
+	assert.match(cli([...args, '--reveal', 'json', '--engine', 'classic']).stdout, /"type": "classic"/);
+	assert.equal(cli(['--config', config({ ...o, reveal: 'html' })]).stdout, simcockify(TEXT, { ...o, reveal: 'html' }));
+	assert.equal(cli(['--config', config({ reveal: 'xml' })]).status, 2);
+});

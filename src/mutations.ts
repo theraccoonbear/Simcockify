@@ -2,12 +2,9 @@
 // handled as arrays of units (a code point plus any combining marks), so
 // surrogate pairs and accented letters are never split.
 import { KeyboardMap, nearbyKeys } from './keyboard.js';
+import { TypoType } from './options.js';
 
 export type Random = () => number;
-
-/** Mistake types the word engine can make. */
-export const TYPO_TYPES = ['slip', 'transpose', 'insert'] as const;
-export type TypoType = (typeof TYPO_TYPES)[number];
 
 export interface MutationContext {
 	random: Random;
@@ -19,7 +16,23 @@ export interface MutationContext {
 /** Word-level mistake: receives the current units, returns new units or null when not applicable. */
 type Mutation = (units: string[], ctx: MutationContext) => string[] | null;
 
+/** Groups of commonly confused words. Lookups are case-insensitive. */
+export const HOMOPHONES: readonly (readonly string[])[] = [
+	['their', 'there', "they're"],
+	['its', "it's"],
+	['your', "you're"],
+	['to', 'too'],
+	['then', 'than'],
+	['lose', 'loose'],
+	['affect', 'effect'],
+	['whose', "who's"],
+];
+
+const HOMOPHONE_INDEX = new Map<string, readonly string[]>();
+for (const group of HOMOPHONES) for (const w of group) HOMOPHONE_INDEX.set(w, group);
+
 const LETTER = /^\p{L}/u;
+const APOSTROPHE = /^['’]$/;
 
 export function toUnits(word: string): string[] {
 	return word.match(/\P{M}\p{M}*/gu) ?? [];
@@ -30,6 +43,14 @@ const isUpper = (u: string): boolean => u !== u.toLowerCase() && u === u.toUpper
 
 export function letterCount(units: string[]): number {
 	return units.filter(isLetter).length;
+}
+
+/** Applies the case pattern of `source` (ALL CAPS, Capitalised or lower) to `word`. */
+export function matchCase(source: string, word: string): string {
+	const letters = toUnits(source).filter(isLetter);
+	if (letters.length > 1 && letters.every(isUpper)) return word.toUpperCase();
+	if (letters.length > 0 && isUpper(letters[0])) return word.charAt(0).toUpperCase() + word.slice(1);
+	return word;
 }
 
 function pick<T>(items: T[], random: Random): T {
@@ -64,8 +85,7 @@ function hasNeighbour(unit: string, ctx: MutationContext): boolean {
 	return [...unit].length === 1 && nearbyKeys(unit, ctx.keyboard, ctx.slipDistance).length > 0;
 }
 
-const MUTATIONS: Record<TypoType, Mutation> = {
-	/** Key slip: one letter replaced by a neighbouring key, in the same case. */
+const MUTATIONS: Record<Exclude<TypoType, 'sentenceEnd'>, Mutation> = {
 	slip(units, ctx) {
 		const at = indexes(units, (i) => hasNeighbour(units[i], ctx));
 		if (at.length === 0) return null;
@@ -75,7 +95,6 @@ const MUTATIONS: Record<TypoType, Mutation> = {
 		return out;
 	},
 
-	/** Two adjacent letters swapped; each position keeps its case ("The" -> "Hte"). */
 	transpose(units, ctx) {
 		const at = indexes(
 			units,
@@ -84,6 +103,7 @@ const MUTATIONS: Record<TypoType, Mutation> = {
 		if (at.length === 0) return null;
 		const i = pick(at, ctx.random);
 		const out = units.slice();
+		// Swap the letters but keep the case of each position ("The" -> "Hte").
 		const a = units[i];
 		const b = units[i + 1];
 		out[i] = isUpper(a) ? b.toUpperCase() : b.toLowerCase();
@@ -91,7 +111,25 @@ const MUTATIONS: Record<TypoType, Mutation> = {
 		return out;
 	},
 
-	/** Extra character: a neighbouring key inserted before or after a letter; nothing is overwritten. */
+	double(units, ctx) {
+		const at = indexes(units, (i) => isLetter(units[i]) && units[i + 1] !== units[i] && units[i - 1] !== units[i]);
+		if (at.length === 0) return null;
+		const i = pick(at, ctx.random);
+		const out = units.slice();
+		out.splice(i, 0, units[i]);
+		return out;
+	},
+
+	drop(units, ctx) {
+		if (letterCount(units) < 3) return null;
+		// Keep the first letter: dropped letters are almost always inside or at the end of a word.
+		const at = indexes(units, (i) => i > 0 && isLetter(units[i]));
+		if (at.length === 0) return null;
+		const out = units.slice();
+		out.splice(pick(at, ctx.random), 1);
+		return out;
+	},
+
 	insert(units, ctx) {
 		const at = indexes(units, (i) => hasNeighbour(units[i], ctx));
 		if (at.length === 0) return null;
@@ -101,13 +139,65 @@ const MUTATIONS: Record<TypoType, Mutation> = {
 		out.splice(ctx.random() < 0.5 ? i : i + 1, 0, extra);
 		return out;
 	},
+
+	apostrophe(units, ctx) {
+		const at = indexes(units, (i) => APOSTROPHE.test(units[i]));
+		if (at.length === 0) return null;
+		const out = units.slice();
+		out.splice(pick(at, ctx.random), 1);
+		return out;
+	},
+
+	homophone(units, ctx) {
+		const word = units.join('');
+		const group = HOMOPHONE_INDEX.get(word.toLowerCase().replace(/’/g, "'"));
+		if (!group) return null;
+		const others = group.filter((w) => w !== word.toLowerCase().replace(/’/g, "'"));
+		const curly = word.includes('’');
+		let swap = pick(others, ctx.random);
+		if (curly) swap = swap.replace(/'/g, '’');
+		return toUnits(matchCase(word, swap));
+	},
+
+	duplicate(units) {
+		if (letterCount(units) < 2) return null;
+		return [...units, ' ', ...units];
+	},
+
+	stickyShift(units, ctx) {
+		// Only for Capitalised words: Shift held a beat too long ("THe") or pressed late ("tHe").
+		if (letterCount(units) < 3 || !isUpper(units[0]) || !isLetter(units[1]) || isUpper(units[1])) return null;
+		const out = units.slice();
+		if (ctx.random() < 0.6) {
+			out[1] = units[1].toUpperCase();
+		} else {
+			out[0] = units[0].toLowerCase();
+			out[1] = units[1].toUpperCase();
+		}
+		return out;
+	},
 };
 
-/** Words shorter than this (in letters) are left alone. */
+/** Types that change individual letters; they need a word of at least three letters. */
+export const CHARACTER_TYPES: ReadonlySet<TypoType> = new Set<TypoType>(['slip', 'transpose', 'double', 'drop', 'insert', 'stickyShift']);
+
+/** Words shorter than this (in letters) only get word-level mistakes (homophone, duplicate, apostrophe). */
 export const MIN_WORD_LETTERS = 3;
 
-/** Applies the mutation `type` to `units`, or returns null when it does not apply to this word. */
+/**
+ * Applies the mutation `type` to `units`, returning the new units, or null when
+ * the type does not apply to this word (too short, no apostrophe, not a homophone...).
+ */
 export function mutate(type: TypoType, units: string[], ctx: MutationContext): string[] | null {
-	if (letterCount(units) < MIN_WORD_LETTERS) return null;
+	if (type === 'sentenceEnd') return null;
+	if (CHARACTER_TYPES.has(type) && letterCount(units) < MIN_WORD_LETTERS) return null;
 	return MUTATIONS[type](units, ctx);
+}
+
+/** Variants of a hurried sentence end, replacing a final ".". */
+export function hastySentenceEnd(random: Random): string {
+	const roll = random();
+	if (roll < 0.5) return '';
+	if (roll < 0.75) return '..';
+	return ',';
 }
