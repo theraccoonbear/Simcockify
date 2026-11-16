@@ -25,6 +25,12 @@ export interface SimcockifyOptions {
 	seed?: number | string;
 	/** `'word'` (default) or `'classic'` (the 1.x algorithm, reproducing old seeds exactly). */
 	engine?: Engine;
+	/**
+	 * Fatigue drift, -1 to 1. Positive values make the start cleaner and the end
+	 * messier (the average rate is unchanged); negative values do the reverse.
+	 * 0 (default) is off. Word engine only.
+	 */
+	fatigue?: number;
 	/** Relative weights of the mistake types (word engine only); merged over the defaults. */
 	typoWeights?: TypoWeights;
 	/** Physical keyboard layout used to pick neighbouring keys. */
@@ -73,6 +79,7 @@ export const DEFAULT_OPTIONS = {
 	keyboardType: KEYBOARD_MAPS.QWERTY,
 	debug: false,
 	engine: 'word' as Engine,
+	fatigue: 0,
 	FiveHourEnergies: 0,
 	Espressos: 0,
 	Coffees: 0,

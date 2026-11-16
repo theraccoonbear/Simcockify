@@ -57,3 +57,15 @@ test('simcockifyElement: classic engine and word engine both work; protected tok
 	assert.match(root.textContent, / 42\./);
 	assert.equal(root.querySelectorAll('p').length, 2);
 });
+
+test('simcockifyElement: fatigue runs across the element in document order', () => {
+	const para = '<p>Leverage agile frameworks to provide a robust synopsis for high level overviews.</p>';
+	const dom = new JSDOM(`<div id="r">${para.repeat(60)}</div>`);
+	const root = dom.window.document.getElementById('r');
+	const before = [...root.querySelectorAll('p')].map((p) => p.textContent);
+	simcockifyElement(root, { seed: 'f', DeadlinesLooming: 8, fatigue: 1 });
+	const changed = [...root.querySelectorAll('p')].map((p, i) => (p.textContent === before[i] ? 0 : 1));
+	const first = changed.slice(0, 20).reduce((a, b) => a + b, 0);
+	const last = changed.slice(40).reduce((a, b) => a + b, 0);
+	assert.ok(last > first, `changed paragraphs: first ${first}, last ${last}`);
+});

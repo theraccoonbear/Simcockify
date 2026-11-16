@@ -109,3 +109,12 @@ test('--weights and config typoWeights; flags merge over config per key', () => 
 	}
 	assert.equal(cli(['--config', config({ typoWeights: 3 })]).status, 2);
 });
+
+test('--fatigue and config fatigue', () => {
+	const long = TEXT.repeat(20);
+	const r = cli(['--seed', 'f', '--deadlines-looming', '8', '--fatigue', '0.7'], long);
+	assert.equal(r.status, 0);
+	assert.equal(r.stdout, simcockify(long, { seed: 'f', DeadlinesLooming: 8, fatigue: 0.7 }));
+	assert.equal(cli(['--config', config({ seed: 'f', DeadlinesLooming: 8, fatigue: 0.7 })], long).stdout, r.stdout);
+	for (const bad of ['2', '-1.5', 'tired']) assert.equal(cli(['--fatigue', bad]).status, 2, bad);
+});

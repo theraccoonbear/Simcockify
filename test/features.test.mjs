@@ -132,3 +132,35 @@ test('a zero rate gives identical output, whatever the weights', () => {
 		assert.equal(simcockify(t, { seed, Coffees: 2, typoWeights: { duplicate: 50, sentenceEnd: 1, homophone: 9 } }), t);
 	}
 });
+
+// --- fatigue ---
+
+/** Changes per third of a long text (by output position). */
+function thirds(o) {
+	const r = detailed(PROSE.repeat(40), { seed: 'fatigue', DeadlinesLooming: 6, ...o });
+	const n = [0, 0, 0];
+	for (const c of r.changes) n[Math.min(2, Math.floor((3 * c.index) / r.text.length))]++;
+	return n;
+}
+
+test('fatigue: start cleaner, end messier; negative is the reverse; 0 is flat', () => {
+	const up = thirds({ fatigue: 1 });
+	assert.ok(up[0] < up[1] && up[1] < up[2], `fatigue 1: ${up}`);
+	assert.ok(up[2] > 2 * up[0], `fatigue 1: ${up}`);
+	const down = thirds({ fatigue: -1 });
+	assert.ok(down[0] > down[1] && down[1] > down[2], `fatigue -1: ${down}`);
+	const flat = thirds({ fatigue: 0 });
+	assert.ok(Math.max(...flat) < 1.6 * Math.min(...flat), `fatigue 0: ${flat}`);
+	const total = (n) => n[0] + n[1] + n[2];
+	assert.ok(Math.abs(total(up) - total(flat)) < 0.25 * total(flat), 'average rate roughly unchanged');
+	// Out-of-range values are clamped to -1..1.
+	assert.equal(simcockify(PROSE, { seed: 2, ...HEAVY, fatigue: 5 }), simcockify(PROSE, { seed: 2, ...HEAVY, fatigue: 1 }));
+});
+
+test('fatigue spans all segments in order (as for the text nodes of an element)', () => {
+	const segs = Array(30).fill(PROSE);
+	const counts = simcockifySegments(segs, { seed: 'seg', DeadlinesLooming: 6, fatigue: 1 }).map((r) => r.changes.length);
+	const first = counts.slice(0, 10).reduce((a, b) => a + b, 0);
+	const last = counts.slice(20).reduce((a, b) => a + b, 0);
+	assert.ok(last > 2 * first, `first ten ${first}, last ten ${last}`);
+});

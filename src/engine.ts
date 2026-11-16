@@ -1,5 +1,5 @@
 // The word engine: tokenises text, then gives each word a number of mistakes
-// drawn from the condition-derived rate. Only word tokens are changed.
+// drawn from the condition-derived rate, ramped by fatigue over the input.
 import { KeyboardMap } from './keyboard.js';
 import { CHARACTER_TYPES, hastySentenceEnd, mutate, MutationContext, toUnits } from './mutations.js';
 import { TypoType, TYPO_TYPES } from './options.js';
@@ -22,8 +22,10 @@ export interface SegmentResult {
 }
 
 export interface WordEngineSettings {
-	/** Expected mistakes per word. */
+	/** Expected mistakes per word before fatigue. */
 	rate: number;
+	/** -1..1; see `SimcockifyOptions.fatigue`. */
+	fatigue: number;
 	weights: Record<TypoType, number>;
 	keyboard: KeyboardMap;
 	slipDistance: number;
@@ -35,30 +37,34 @@ export interface WordEngineSettings {
 const MAX_PER_WORD = 3;
 const WORD_TYPES = TYPO_TYPES.filter((t) => t !== 'sentenceEnd');
 
-/** Slip distance in key widths for a velocity value (4, the minimum, means immediate neighbours). */
+/** Slip distance in key widths for a classic velocity value (4 = immediate neighbours). */
 export function slipDistanceFor(velocity: number): number {
 	return Math.min(3.5, 1.25 + 0.5 * Math.max(0, velocity - 4));
 }
 
-/**
- * Converts an expected count per word into the continue-probability of a
- * geometric draw, so the mean number of mistakes per word is about `rate`.
- * A rate of 0 gives 0: there is no minimum per text.
- */
+/** Converts an expected count per word into the continue-probability of a geometric draw. */
 function stepProbability(rate: number): number {
 	return rate > 0 ? rate / (1 + rate) : 0;
 }
 
 /**
- * Runs the word engine over several text segments as one document and
- * returns each segment's output and changes.
+ * Runs the word engine over several text segments as one document (fatigue
+ * spans all of them, in order) and returns each segment's output and changes.
  */
 export function runWordEngine(segments: string[], s: WordEngineSettings): SegmentResult[] {
 	const tokenized: Token[][] = segments.map(tokenize);
+	const totalWords = tokenized.reduce((n, toks) => n + toks.filter((t) => t.kind === 'word').length, 0);
+	const fatigue = Math.max(-1, Math.min(1, s.fatigue));
 	const ctx: MutationContext = { random: s.random, keyboard: s.keyboard, slipDistance: s.slipDistance };
 	const wordWeights = WORD_TYPES.map((t) => Math.max(0, s.weights[t] ?? 0));
 	const sentenceShare = Math.min(1, Math.max(0, s.weights.sentenceEnd ?? 0));
-	const p = stepProbability(s.rate);
+	let wordNo = 0;
+
+	const rateAt = (n: number): number => {
+		if (s.rate <= 0) return 0;
+		const t = totalWords > 1 ? n / (totalWords - 1) : 0.5;
+		return s.rate * Math.max(0, 1 + fatigue * (2 * t - 1));
+	};
 
 	const mutateWord = (word: string, p: number): { text: string; types: TypoType[] } => {
 		let units = toUnits(word);
@@ -107,6 +113,7 @@ export function runWordEngine(segments: string[], s: WordEngineSettings): Segmen
 				out += tok.text;
 				continue;
 			}
+			const p = stepProbability(rateAt(wordNo++));
 			const { text, types } = p > 0 ? mutateWord(tok.text, p) : { text: tok.text, types: [] };
 			let original = tok.text;
 			let replacement = text;

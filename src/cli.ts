@@ -34,6 +34,7 @@ Other:
   --keyboard <name>                keyboard layout: ${Object.keys(KEYBOARD_MAPS).join(', ')} (default QWERTY)
   --engine <name>                  typo algorithm: ${ENGINES.join(', ')} (default ${ENGINES[0]});
                                    classic is the 1.x algorithm, so old seeds reproduce
+  --fatigue <n>                    -1..1; >0 starts clean and ends messier, <0 the reverse (default 0)
   --weights <json>                 relative typo weights (word engine), e.g. '{"transpose":3,"homophone":0}'
                                    types: ${TYPO_TYPES.join(', ')}
   --debug                          log activity to stderr
@@ -42,7 +43,7 @@ Other:
   -v, --version                    show the version
 
 Config files use the option names: ${NUMERIC_OPTIONS.join(', ')},
-seed, keyboard, debug, engine, typoWeights (an object of typo weights).
+seed, keyboard, debug, engine, fatigue, typoWeights (an object of typo weights).
 `;
 
 export class UsageError extends Error {}
@@ -136,6 +137,10 @@ function applyValues(opts: SimcockifyOptions, values: Record<string, unknown>, s
 				throw new UsageError(`${source}engine must be one of: ${ENGINES.join(', ')}`);
 			}
 			opts.engine = value as Engine;
+		} else if (key === 'fatigue') {
+			const n = toNumber(`${source}fatigue`, value);
+			if (n < -1 || n > 1) throw new UsageError(`${source}fatigue must be between -1 and 1`);
+			opts.fatigue = n;
 		} else if (key === 'typoWeights') {
 			// Merged key by key, so --weights adjusts the config file's weights.
 			opts.typoWeights = { ...opts.typoWeights, ...weightsFrom(`${source}typoWeights`, value) };
@@ -157,6 +162,7 @@ export function run(argv: string[], io: CliIO): number {
 			debug: { type: 'boolean' },
 			engine: { type: 'string' },
 			weights: { type: 'string' },
+			fatigue: { type: 'string' },
 		};
 		for (const flag of Object.values(FLAGS)) options[flag] = { type: 'string' };
 
@@ -184,6 +190,7 @@ export function run(argv: string[], io: CliIO): number {
 		if (values.keyboard !== undefined) fromFlags.keyboard = values.keyboard;
 		if (values.debug) fromFlags.debug = true;
 		if (values.engine !== undefined) fromFlags.engine = values.engine;
+		if (values.fatigue !== undefined) fromFlags.fatigue = values.fatigue;
 		if (typeof values.weights === 'string') fromFlags.typoWeights = parseWeightsFlag(values.weights);
 		applyValues(opts, fromFlags, '--');
 

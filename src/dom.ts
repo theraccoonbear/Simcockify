@@ -22,8 +22,9 @@ function textNodes(el: Element, exclude: string): Text[] {
 
 /**
  * Applies typos to every text node under `el`, in place. Elements matching
- * `options.exclude` (default `.no-simcockify`) are left untouched. One PRNG
- * stream is shared across the text nodes, in document order.
+ * `options.exclude` (default `.no-simcockify`) are left untouched. The text
+ * nodes are treated as one document in order, so fatigue runs across the
+ * whole element.
  */
 export function simcockifyElement(el: Element, options: SimcockifyOptions = {}): void {
 	const exclude = options.exclude ?? DEFAULT_OPTIONS.exclude;

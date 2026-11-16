@@ -6,6 +6,7 @@ import {
 	DEFAULT_TYPO_WEIGHTS,
 	Engine,
 	ENGINES,
+	num,
 	readConditions,
 	SimcockifyOptions,
 	TypoType,
@@ -65,6 +66,7 @@ function createRunner(input: SimcockifyOptions): SegmentsRunner {
 	const velocity = typoVelocity(conditions);
 	const settings = {
 		rate,
+		fatigue: num(options.fatigue, DEFAULT_OPTIONS.fatigue),
 		weights: options.typoWeights,
 		keyboard,
 		slipDistance: slipDistanceFor(velocity),
@@ -73,7 +75,7 @@ function createRunner(input: SimcockifyOptions): SegmentsRunner {
 	};
 	return (segments) => {
 		log(`TEXT: ${JSON.stringify(segments.join(''))}`);
-		log(`Rate ${rate.toFixed(3)} typos per word, velocity ${velocity}`);
+		log(`Rate ${rate.toFixed(3)} typos per word, velocity ${velocity}, fatigue ${settings.fatigue}`);
 		const results = runWordEngine(segments, settings);
 		log(`Changed ${results.reduce((n, r) => n + r.changes.length, 0)} word(s)`);
 		return results;
@@ -95,8 +97,9 @@ export function simcockify(text: string, options: SimcockifyOptions = {}): strin
 }
 
 /**
- * Applies typos to several pieces of text in order with one PRNG stream and
- * returns each piece's text and changes. Used by the DOM helper.
+ * Applies typos to several pieces of text as one document (fatigue runs across
+ * all of them in order) and returns each piece's text and changes. Used by
+ * the DOM helper for an element's text nodes.
  */
 export function simcockifySegments(segments: string[], options: SimcockifyOptions = {}): SegmentResult[] {
 	return createRunner(options)(segments);
