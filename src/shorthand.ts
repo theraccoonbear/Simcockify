@@ -16,7 +16,7 @@ export const SHORTHAND_ALIASES: Readonly<Record<string, string>> = {
 };
 
 /** Options that can be set by their full name (matched case-insensitively). */
-const NAMED_OPTIONS = [...NUMERIC_OPTIONS, 'seed', 'fatigue', 'persona', 'engine', 'reveal', 'keyboard'];
+const NAMED_OPTIONS = [...NUMERIC_OPTIONS, 'seed', 'fatigue', 'persona', 'engine', 'reveal', 'keyboard', 'format'];
 
 /** The flag spelling of the numeric options (`five-hour-energies`), also accepted as keys. */
 const kebab = (name: string): string => name.replace(/[A-Z]/g, (c, i) => (i ? '-' : '') + c.toLowerCase());

@@ -28,4 +28,7 @@ export { KEYBOARD_MAPS, accessibleKeys, nearbyKeys } from './keyboard.js';
 export type { KeyboardMap, NearbyKey } from './keyboard.js';
 export { createRandom, createSeededRandom, hashCode } from './random.js';
 export { tokenize, isProtectedChunk } from './tokenize.js';
+export { FORMATS, segment } from './formats/segment.js';
+export type { Format, FormatOption, Segment } from './formats/segment.js';
+export { detectFormat, formatFromHint, FORMAT_ALIASES } from './formats/detect.js';
 export type { Token, TokenKind } from './tokenize.js';
