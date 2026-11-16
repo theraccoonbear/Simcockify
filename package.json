@@ -37,6 +37,7 @@
 		"build": "npm run build:tsc && npm run build:browser",
 		"build:tsc": "tsc -p tsconfig.json",
 		"build:browser": "node scripts/build-browser.mjs",
+		"build:site": "node scripts/build-site.mjs",
 		"test": "npm run build && node --test test/",
 		"prepare": "npm run build"
 	},
