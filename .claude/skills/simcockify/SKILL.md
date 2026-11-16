@@ -5,7 +5,7 @@ description: Inject realistic human typos into text with the simcockify CLI. Use
 
 # Simcockify
 
-Runs text through the `simcockify` CLI, which reads stdin and writes stdout. Output is repeatable for a fixed seed and options.
+Runs text through the `simcockify` CLI, which reads a named file (or stdin) and writes stdout. Output is repeatable for a fixed seed and options.
 
 ## Steps
 
@@ -16,6 +16,7 @@ Runs text through the `simcockify` CLI, which reads stdin and writes stdout. Out
 
    ```sh
    timeout 30 npx simcockify --seed <seed> [options] < /tmp/draft.txt
+   timeout 30 npx simcockify s:<seed>,dl:5,eb:3 /tmp/draft.txt     # shorthand spec and a file argument
    ```
 
    Inside this repository, use the local build instead: `timeout 30 node bin/simcockify.js ...` (run `npm install && npm run build` first if `dist/` is missing).
@@ -32,9 +33,13 @@ Velocity (how far a typo lands from the intended key, plus a small frequency eff
 
 Style (word engine): `--persona <name>` (presets, see below), `--fatigue <-1..1>` (above 0 starts clean and ends messier, below 0 the reverse; default 0), `--weights '<json>'` (relative weight per mistake type: slip, transpose, double, drop, insert, apostrophe, homophone, duplicate, stickyShift, sentenceEnd; 0 turns a type off).
 
-Other: `--seed <value>`, `--config <file.json>` (flags override it, it overrides the persona), `--keyboard QWERTY`, `--debug` (stderr), `--engine word|classic`. Use `--engine classic` only to reproduce output from 1.x or an earlier run made with it; it swaps characters across spaces and changes URLs and numbers.
+Other: `--seed <value>`, `--config <file.json>` (shorthand and flags override it, it overrides the persona), `--keyboard QWERTY`, `--debug` (stderr), `--engine word|classic`. Use `--engine classic` only to reproduce output from 1.x or an earlier run made with it; it swaps characters across spaces and changes URLs and numbers.
 
 Typos per word (the rate) is `(|sleep-8|/8 + deadlines/20 + blocked/15 + minutes/1440 + 0.5 if |2-coffees| + energies + espressos > 0) / 5`. With defaults this is 0.1; only `--coffees 2` with everything else default gives none. Velocity sets how far a key slip can land (4, the default and minimum, means adjacent keys only).
+
+## Shorthand
+
+A positional `key:value,key:value` spec replaces the long flags: `c` Coffees, `e` Espressos, `fhe` FiveHourEnergies, `hos` HoursOfSleep, `mtc` MinutesTalkingToClients, `dl` DeadlinesLooming, `eb` EmployeesBlocked, `s` seed, `f` fatigue, `p` persona. Full option names (any case), flag names, `engine`, `reveal` and `keyboard` also work as keys. No spaces inside the spec. For example `--coffees 3 --hours-of-sleep 6 --deadlines-looming 5 --employees-blocked 3 --seed x` is `c:3,hos:6,dl:5,eb:3,s:x`. Explicit flags override the spec. A positional argument that is not a spec must be an existing file, which is read instead of stdin. An unknown key fails with a suggestion; fix it and rerun.
 
 ## Intensity mapping
 
