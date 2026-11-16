@@ -1,3 +1,4 @@
+import type { FormatOption } from './formats/segment.js';
 import { KEYBOARD_MAPS, KeyboardMap } from './keyboard.js';
 
 /** Mistake types the word engine can make. */
@@ -44,6 +45,13 @@ export interface SimcockifyOptions {
 	 * as JSON. The DOM helper wraps changes in span elements for any mode.
 	 */
 	reveal?: RevealMode;
+	/**
+	 * Input format: `'text'` (default), `'markdown'`, `'html'` (also XML),
+	 * `'latex'`, or `'auto'` to detect it with `detectFormat`. Only prose
+	 * gets typos; code, markup, URLs, math and the like are copied exactly.
+	 * Ignored by `simcockifySegments` and the DOM helper.
+	 */
+	format?: FormatOption;
 	/** Physical keyboard layout used to pick neighbouring keys. */
 	keyboardType?: KeyboardMap;
 	/** Log activity messages. */

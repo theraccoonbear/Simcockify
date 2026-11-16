@@ -1,5 +1,7 @@
 import { createClassicSimcockifier } from './classic.js';
 import { runWordEngine, SegmentResult, slipDistanceFor } from './engine.js';
+import { detectFormat } from './formats/detect.js';
+import { Format, FORMATS, segment } from './formats/segment.js';
 import { KeyboardMap } from './keyboard.js';
 import {
 	DEFAULT_OPTIONS,
@@ -72,6 +74,9 @@ export function resolveOptions(options: SimcockifyOptions = {}): SimcockifyOptio
 	if (o.engine !== undefined && !ENGINES.includes(o.engine)) {
 		throw new Error(`unknown engine "${o.engine}"; choose one of: ${ENGINES.join(', ')}`);
 	}
+	if (o.format !== undefined && o.format !== 'auto' && !FORMATS.includes(o.format)) {
+		throw new Error(`unknown format "${o.format}"; choose one of: auto, ${FORMATS.join(', ')}`);
+	}
 	if (o.reveal !== undefined && !REVEAL_MODES.includes(o.reveal)) {
 		throw new Error(`unknown reveal mode "${o.reveal}"; choose one of: ${REVEAL_MODES.join(', ')}`);
 	}
@@ -130,6 +135,40 @@ function createRunner(input: SimcockifyOptions): SegmentsRunner {
 	};
 }
 
+/** The format to use for `text`: `'text'` when unset, detected when `'auto'`. */
+function formatFor(text: string, options: SimcockifyOptions): Format {
+	const f = options.format ?? 'text';
+	return f === 'auto' ? detectFormat(text) : f;
+}
+
+/**
+ * Runs the engine over the prose segments of `text` only and stitches the
+ * protected segments back in, shifting each change's index to the output.
+ * Segments without letters are skipped, so they never consume the PRNG.
+ * The `'text'` format is one segment, exactly as without formats.
+ */
+function runFormatted(text: string, options: SimcockifyOptions, run: SegmentsRunner): SegmentResult {
+	const format = formatFor(text, options);
+	if (options.debug) (options.logger ?? console.log)(`Format: ${format}`);
+	if (format === 'text') return run([text])[0];
+	const segments = segment(text, format);
+	const prose = segments.flatMap((s, i) => (s.prose && /\p{L}/u.test(s.text) ? [i] : []));
+	const results = run(prose.map((i) => segments[i].text));
+	const byIndex = new Map(prose.map((i, k) => [i, results[k]]));
+	let out = '';
+	const changes: SegmentResult['changes'] = [];
+	segments.forEach((s, i) => {
+		const r = byIndex.get(i);
+		if (!r) {
+			out += s.text;
+			return;
+		}
+		for (const c of r.changes) changes.push({ ...c, index: c.index + out.length });
+		out += r.text;
+	});
+	return { text: out, changes };
+}
+
 /**
  * Builds a function that applies typos to text. All calls share one PRNG
  * stream, so a sequence of texts is repeatable as a whole. If `reveal` is
@@ -137,9 +176,10 @@ function createRunner(input: SimcockifyOptions): SegmentsRunner {
  */
 export function createSimcockifier(options: SimcockifyOptions = {}): (text: string) => string {
 	const run = createRunner(options);
-	const reveal = resolveOptions(options).reveal;
+	const resolved = resolveOptions(options);
+	const reveal = resolved.reveal;
 	return (text) => {
-		const [result] = run([text]);
+		const result = runFormatted(text, resolved, run);
 		return reveal ? renderReveal(result, reveal) : result.text;
 	};
 }
@@ -158,13 +198,14 @@ export function simcockify(text: string, options: SimcockifyOptions = {}): strin
  * `replacement` in `text`. `reveal` is ignored.
  */
 export function simcockifyDetailed(text: string, options: SimcockifyOptions = {}): DetailedResult {
-	return createRunner(options)([text])[0];
+	return runFormatted(text, resolveOptions(options), createRunner(options));
 }
 
 /**
  * Applies typos to several pieces of text as one document (fatigue runs across
- * all of them in order) and returns each piece's text and changes. Used by
- * the DOM helper for an element's text nodes.
+ * all of them in order) and returns each piece's text and changes. Each piece
+ * is treated as prose; `format` is ignored. Used by the DOM helper for an
+ * element's text nodes.
  */
 export function simcockifySegments(segments: string[], options: SimcockifyOptions = {}): SegmentResult[] {
 	return createRunner(options)(segments);
