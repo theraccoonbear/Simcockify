@@ -1,4 +1,14 @@
-export { simcockify, createSimcockifier, simcockifySegments, resolveOptions, layerOptions, personaOptions } from './core.js';
+export {
+	simcockify,
+	simcockifyDetailed,
+	createSimcockifier,
+	simcockifySegments,
+	resolveOptions,
+	layerOptions,
+	personaOptions,
+	renderReveal,
+} from './core.js';
+export type { DetailedResult } from './core.js';
 export type { Change, SegmentResult } from './core.js';
 export { HOMOPHONES } from './mutations.js';
 export { PERSONAS, PERSONA_NAMES } from './personas.js';
@@ -9,10 +19,11 @@ export {
 	NUMERIC_OPTIONS,
 	TYPO_TYPES,
 	ENGINES,
+	REVEAL_MODES,
 	typoRate,
 	typoVelocity,
 } from './options.js';
-export type { SimcockifyOptions, Engine, TypoType, TypoWeights } from './options.js';
+export type { SimcockifyOptions, Engine, RevealMode, TypoType, TypoWeights } from './options.js';
 export { KEYBOARD_MAPS, accessibleKeys, nearbyKeys } from './keyboard.js';
 export type { KeyboardMap, NearbyKey } from './keyboard.js';
 export { createRandom, createSeededRandom, hashCode } from './random.js';

@@ -69,3 +69,23 @@ test('simcockifyElement: fatigue runs across the element in document order', () 
 	const last = changed.slice(40).reduce((a, b) => a + b, 0);
 	assert.ok(last > first, `changed paragraphs: first ${first}, last ${last}`);
 });
+
+test('simcockifyElement reveal: changes wrapped in span elements built as DOM nodes', () => {
+	const dom = new JSDOM('<div id="r"><p>Leverage agile frameworks &lt;b&gt;not bold&lt;/b&gt; to provide a robust <a href="#">synopsis overview</a> for everyone today.</p></div>');
+	const root = dom.window.document.getElementById('r');
+	const before = root.textContent;
+	simcockifyElement(root, { seed: 'rv', DeadlinesLooming: 20, EmployeesBlocked: 15, reveal: 'html' });
+	const spans = [...root.querySelectorAll('span.simcock')];
+	assert.ok(spans.length > 0);
+	for (const s of spans) {
+		assert.match(s.getAttribute('title'), /^was: \S/);
+		assert.equal(s.children.length, 0, 'span holds only text');
+	}
+	// Escaped markup in the text stays text: no <b> element appears.
+	assert.equal(root.querySelectorAll('b').length, 0);
+	assert.ok(root.textContent.includes('<b>'));
+	assert.equal(root.querySelectorAll('a').length, 1);
+	// Undoing each span's change restores the original text.
+	for (const s of spans) s.replaceWith(dom.window.document.createTextNode(s.getAttribute('title').slice(5)));
+	assert.equal(root.textContent, before);
+});

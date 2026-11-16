@@ -8,6 +8,7 @@ import {
 	ENGINES,
 	num,
 	readConditions,
+	REVEAL_MODES,
 	SimcockifyOptions,
 	TypoType,
 	TYPO_TYPES,
@@ -17,8 +18,11 @@ import {
 } from './options.js';
 import { PERSONAS } from './personas.js';
 import { createRandom, createSeededRandom } from './random.js';
+import { DetailedResult, diffSameLength, renderReveal } from './reveal.js';
 
 export type { Change, SegmentResult } from './engine.js';
+export type { DetailedResult } from './reveal.js';
+export { renderReveal };
 
 type SegmentsRunner = (segments: string[]) => SegmentResult[];
 
@@ -68,6 +72,9 @@ export function resolveOptions(options: SimcockifyOptions = {}): SimcockifyOptio
 	if (o.engine !== undefined && !ENGINES.includes(o.engine)) {
 		throw new Error(`unknown engine "${o.engine}"; choose one of: ${ENGINES.join(', ')}`);
 	}
+	if (o.reveal !== undefined && !REVEAL_MODES.includes(o.reveal)) {
+		throw new Error(`unknown reveal mode "${o.reveal}"; choose one of: ${REVEAL_MODES.join(', ')}`);
+	}
 	const weights = { ...DEFAULT_TYPO_WEIGHTS };
 	for (const [k, v] of Object.entries(o.typoWeights ?? {})) {
 		if (!(TYPO_TYPES as readonly string[]).includes(k)) {
@@ -82,8 +89,8 @@ export function resolveOptions(options: SimcockifyOptions = {}): SimcockifyOptio
 
 /**
  * Builds a runner over arrays of text segments sharing one PRNG stream. The
- * classic engine processes each segment separately, as 1.x did, and reports
- * no change list.
+ * classic engine processes each segment separately, as 1.x did; its change
+ * list comes from comparing input and output (it never changes the length).
  */
 function createRunner(input: SimcockifyOptions): SegmentsRunner {
 	const options = resolveOptions(input);
@@ -96,7 +103,11 @@ function createRunner(input: SimcockifyOptions): SegmentsRunner {
 
 	if (engine === 'classic') {
 		const apply = createClassicSimcockifier(conditions, keyboard, options.random ?? createRandom(options.seed), log);
-		return (segments) => segments.map((input) => ({ text: apply(input), changes: [] }));
+		return (segments) =>
+			segments.map((input) => {
+				const text = apply(input);
+				return { text, changes: diffSameLength(input, text, 'classic') };
+			});
 	}
 
 	const rate = typoRate(conditions);
@@ -121,16 +132,33 @@ function createRunner(input: SimcockifyOptions): SegmentsRunner {
 
 /**
  * Builds a function that applies typos to text. All calls share one PRNG
- * stream, so a sequence of texts is repeatable as a whole.
+ * stream, so a sequence of texts is repeatable as a whole. If `reveal` is
+ * set, the returned text is rendered in that mode.
  */
 export function createSimcockifier(options: SimcockifyOptions = {}): (text: string) => string {
 	const run = createRunner(options);
-	return (text) => run([text])[0].text;
+	const reveal = resolveOptions(options).reveal;
+	return (text) => {
+		const [result] = run([text]);
+		return reveal ? renderReveal(result, reveal) : result.text;
+	};
 }
 
-/** Returns `text` with typos injected. Same seed and options give the same output. */
+/**
+ * Returns `text` with typos injected. Same seed and options give the same
+ * output. With `reveal`, the result is marked up as HTML, ANSI or JSON.
+ */
 export function simcockify(text: string, options: SimcockifyOptions = {}): string {
 	return createSimcockifier(options)(text);
+}
+
+/**
+ * Returns the altered text and the list of changes, each
+ * `{ index, original, replacement, type }` with `index` the offset of
+ * `replacement` in `text`. `reveal` is ignored.
+ */
+export function simcockifyDetailed(text: string, options: SimcockifyOptions = {}): DetailedResult {
+	return createRunner(options)([text])[0];
 }
 
 /**

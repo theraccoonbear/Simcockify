@@ -200,3 +200,60 @@ test('persona layering: { ...defaults, ...persona, ...options }', async () => {
 	assert.equal(l.HoursOfSleep, DEFAULT_OPTIONS.HoursOfSleep);
 	assert.throws(() => simcockify('x', { persona: 'nobody' }), /unknown persona "nobody"/);
 });
+
+// --- reveal and simcockifyDetailed ---
+
+test('simcockifyDetailed: indexes point at replacements; replaying changes rebuilds the input', async () => {
+	const { simcockifyDetailed } = await import('../dist/index.js');
+	const t = `${PROSE} Don't lose it's place; their report.`;
+	for (const engine of ['word', 'classic']) {
+		const r = simcockifyDetailed(t, { seed: 'd', ...HEAVY, engine });
+		assert.ok(r.changes.length > 0, engine);
+		assert.equal(r.text, simcockify(t, { seed: 'd', ...HEAVY, engine }), engine);
+		let rebuilt = r.text;
+		for (const c of [...r.changes].reverse()) {
+			assert.equal(r.text.slice(c.index, c.index + c.replacement.length), c.replacement);
+			rebuilt = rebuilt.slice(0, c.index) + c.original + rebuilt.slice(c.index + c.replacement.length);
+		}
+		assert.equal(rebuilt, t, engine);
+	}
+});
+
+test('reveal html: each change wrapped in a span with the HTML-escaped original', async () => {
+	const { simcockifyDetailed } = await import('../dist/index.js');
+	const t = `Don't stop "quoting" <tags> & keep going, they're fine. ${PROSE}`;
+	const o = { seed: 'h', ...HEAVY, typoWeights: { apostrophe: 50 } };
+	const html = simcockify(t, { ...o, reveal: 'html' });
+	const { text, changes } = simcockifyDetailed(t, o);
+	const spans = [...html.matchAll(/<span class="simcock" title="was: ([^"]*)">([^<]*)<\/span>/g)];
+	assert.equal(spans.length, changes.length);
+	assert.ok(spans.some((m) => m[1].includes('&#39;')), 'apostrophe escaped in title');
+	const unescape = (s) => s.replace(/&#39;/g, "'").replace(/&quot;/g, '"').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&');
+	spans.forEach((m, i) => {
+		assert.equal(unescape(m[1]), changes[i].original);
+		assert.equal(unescape(m[2]), changes[i].replacement);
+	});
+	// Removing the spans gives the plain output; surrounding text is left as is.
+	assert.equal(html.replace(/<span class="simcock" title="[^"]*">([^<]*)<\/span>/g, (_, r) => unescape(r)), text);
+	assert.ok(html.includes('<tags> &'));
+});
+
+test('reveal ansi: replacement red and underlined, original dimmed in brackets', async () => {
+	const { simcockifyDetailed } = await import('../dist/index.js');
+	const o = { seed: 'a', ...HEAVY };
+	const ansi = simcockify(PROSE, { ...o, reveal: 'ansi' });
+	const { text, changes } = simcockifyDetailed(PROSE, o);
+	const marks = [...ansi.matchAll(/\x1b\[4;31m(.*?)\x1b\[0m\x1b\[2m\[(.*?)\]\x1b\[0m/g)];
+	assert.equal(marks.length, changes.length);
+	marks.forEach((m, i) => assert.deepEqual([m[1], m[2]], [changes[i].replacement, changes[i].original]));
+	assert.equal(ansi.replace(/\x1b\[2m\[.*?\]\x1b\[0m/g, '').replace(/\x1b\[[0-9;]*m/g, ''), text);
+});
+
+test('reveal json: { text, changes } matching simcockifyDetailed', async () => {
+	const { simcockifyDetailed } = await import('../dist/index.js');
+	const o = { seed: 'j', ...HEAVY };
+	const parsed = JSON.parse(simcockify(PROSE, { ...o, reveal: 'json' }));
+	assert.deepEqual(parsed, simcockifyDetailed(PROSE, o));
+	assert.deepEqual(Object.keys(parsed.changes[0]), ['index', 'original', 'replacement', 'type']);
+	assert.throws(() => simcockify('x', { reveal: 'xml' }), /unknown reveal mode/);
+});

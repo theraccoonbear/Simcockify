@@ -149,3 +149,20 @@ test('--persona and --list-personas; precedence is flags, then config, then pers
 	assert.match(bad.stderr, /persona must be one of: well-rested/);
 	assert.match(cli(['--help'], '').stdout, /--list-personas/);
 });
+
+test('--reveal [html|ansi|json]; bare --reveal is ansi; config reveal', async () => {
+	const { simcockifyDetailed } = await import('../dist/index.js');
+	const o = { seed: 'r', DeadlinesLooming: 20, EmployeesBlocked: 15 };
+	const args = ['--seed', 'r', '--deadlines-looming', '20', '--employees-blocked', '15'];
+	for (const mode of ['html', 'ansi', 'json']) {
+		const r = cli([...args, '--reveal', mode]);
+		assert.equal(r.status, 0, mode);
+		assert.equal(r.stdout, simcockify(TEXT, { ...o, reveal: mode }), mode);
+	}
+	assert.equal(cli([...args, '--reveal']).stdout, simcockify(TEXT, { ...o, reveal: 'ansi' }));
+	assert.equal(cli(['--reveal', ...args]).stdout, simcockify(TEXT, { ...o, reveal: 'ansi' }));
+	assert.deepEqual(JSON.parse(cli([...args, '--reveal', 'json']).stdout), simcockifyDetailed(TEXT, o));
+	assert.match(cli([...args, '--reveal', 'json', '--engine', 'classic']).stdout, /"type": "classic"/);
+	assert.equal(cli(['--config', config({ ...o, reveal: 'html' })]).stdout, simcockify(TEXT, { ...o, reveal: 'html' }));
+	assert.equal(cli(['--config', config({ reveal: 'xml' })]).status, 2);
+});

@@ -20,6 +20,9 @@ export type TypoWeights = Partial<Record<TypoType, number>>;
 export const ENGINES = ['word', 'classic'] as const;
 export type Engine = (typeof ENGINES)[number];
 
+export const REVEAL_MODES = ['html', 'ansi', 'json'] as const;
+export type RevealMode = (typeof REVEAL_MODES)[number];
+
 export interface SimcockifyOptions {
 	/** Seed for the PRNG; the same seed and options give the same output. Random if omitted. */
 	seed?: number | string;
@@ -35,6 +38,12 @@ export interface SimcockifyOptions {
 	persona?: string;
 	/** Relative weights of the mistake types (word engine only); merged per key over lower layers. */
 	typoWeights?: TypoWeights;
+	/**
+	 * Mark what changed: `'html'` wraps changes in `<span class="simcock">`,
+	 * `'ansi'` colours them for a terminal, `'json'` returns `{ text, changes }`
+	 * as JSON. The DOM helper wraps changes in span elements for any mode.
+	 */
+	reveal?: RevealMode;
 	/** Physical keyboard layout used to pick neighbouring keys. */
 	keyboardType?: KeyboardMap;
 	/** Log activity messages. */
