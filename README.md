@@ -22,6 +22,7 @@ npm test
 | `typoWeights` | see [Mistake types](#mistake-types) | word | Relative weight per mistake type, layered per key. |
 | `fatigue` | `0` | word | -1 to 1. Above 0 the text starts cleaner and ends messier; below 0 the reverse. See [Fatigue](#fatigue). |
 | `reveal` | none | | `'html'`, `'ansi'` or `'json'`: mark what changed. See [Reveal](#reveal). |
+| `format` | `'text'` (CLI: `auto`) | | `'text'`, `'markdown'`, `'html'`, `'latex'` or `'auto'`: only prose gets typos. See [Formats](#formats). |
 | `Coffees` | `0` | velocity | Distance from neutral (2) raises slip distance and frequency. |
 | `Espressos` | `0` | velocity | Raises slip distance and frequency. |
 | `FiveHourEnergies` | `0` | velocity | Raises slip distance and frequency. |
@@ -51,6 +52,7 @@ The velocity factors set `velocity = 2 + round(2 + FiveHourEnergies / 8 + |Coffe
 - Each word gets a number of typos drawn from the rate (about `rate` per word on average, at most 3). There is no minimum, so short texts often come through unchanged and a rate of 0 changes nothing.
 - Each typo is one of the [mistake types](#mistake-types), chosen by weight among the types that fit the word.
 - Left alone: anything containing a digit, URLs, emails, `@handles`, `#tags`, `inline code` and fenced code blocks, `snake_case`, `camelCase`, paths, dotted names such as `package.json`, code symbols, command-line flags, acronyms of up to five capitals, and words shorter than three letters.
+- For markdown, HTML or LaTeX input, set `format` so that whole regions (code blocks, tags, math, front matter) are protected. See [Formats](#formats).
 - Letters are handled by code point together with any combining marks, so emoji, surrogate pairs and accented letters are never split.
 
 **`classic`.** The 1.x algorithm, unchanged, so a 1.x seed gives the same text. It works on whole text chunks and has known flaws: transpositions can swap characters several places apart, across spaces and punctuation; the "extra character" typo overwrites the next character instead of inserting; positions are biased toward the start and never reach the last character; the neighbour lookup skips some rows and columns; and every non-empty chunk (each DOM text node) gets at least one typo whenever the rate is above zero.
@@ -63,6 +65,112 @@ Please review the attached proposal before Firday and send feedback to bob@examp
 $ echo "Please review the attached proposal before Friday and send feedback to bob@example.com." \
     | npx simcockify --seed 42 --deadlines-looming 10 --hours-of-sleep 4 --engine classic
 lPease rev ewithe attached proposal before Fridaa ynd seed fnedback to bob@example.com.
+```
+
+## Formats
+
+With a format set, the input is split into prose and protected segments, and the engine runs on the prose only. Protected text is copied through byte for byte, with either engine. Line breaks are always protected in these formats, so headings, list items and paragraphs keep their shape.
+
+| Format | Protected |
+| --- | --- |
+| `text` | nothing beyond the word engine's own rules (the library default) |
+| `markdown` (GFM) | front matter; fenced and indented code; inline code; link and image URLs and titles; reference definitions; autolinks and bare URLs and emails; raw HTML tags, comments, and `script`/`style`/`pre`/`code`/`textarea` contents; entities and escapes; table pipes and delimiter rows; thematic breaks and setext underlines; heading, list, task and quote markers; footnote labels |
+| `html` (also XML) | tags and attributes; `script`, `style`, `pre`, `code`, `textarea`, `svg` and `math` elements; comments, CDATA, doctypes and processing instructions; entities |
+| `latex` | command names and special characters; math (`$…$`, `$$…$$`, `\(…\)`, `\[…\]`, and environments such as `equation` and `align*`); `verbatim`, `lstlisting`, `minted` and `\verb`; comments; the arguments of `\ref`, `\cite`, `\label`, `\url`, `\includegraphics`, `\usepackage`, `\newcommand` and similar; the URL of `\href`; environment names and options |
+
+Link text, alt text, headings, table cells, HTML text content, and the text of LaTeX arguments such as `\section{…}`, `\emph{…}` and `\caption{…}` remain prose.
+
+`format: 'auto'` (the CLI default) calls `detectFormat(text, hint?)`, which scores the first 8 KB:
+
+- **Decisive markers.** A doctype, `<html` or `<?xml` means HTML. `\documentclass` or `\begin{document}` means LaTeX. Front matter or a closed code fence means markdown. If several are present, the earliest wins, so a markdown file that shows HTML in a fence stays markdown.
+- **Scores.** Otherwise each format is scored:
+  - HTML: balanced tag pairs.
+  - LaTeX: `\cmd{`, `\begin`/`\end` pairs and `$` math.
+  - Markdown: headings, `[x](y)` links, reference definitions, lists, emphasis, blockquotes, tables and inline code.
+
+  The best score of at least 2 wins; anything less is `text`. When the runner-up scores within 75% of the best, the format whose segmentation protects more of the text wins.
+- **Hints.** `hint` is a format name, an extension or a file name, and it is a strong hint. It wins unless another format has a decisive marker and the hinted format has no evidence at all. The CLI passes the input file's name as the hint. `--format` and `format:` skip detection.
+
+The sample below has front matter, a link, inline code and a `~~~` fence. It was run with `npx simcockify s:demo,dl:20,eb:15,hos:2 release.md`:
+
+```markdown
+---
+title: Release checklist
+owner: Platform team
+---
+
+# Release checklist
+
+Before shipping, read the [deployment guide](https://example.com/docs/deployment-guide "Deployment guide") and the [rollback notes][rollback]. Run `npm run release` only after review.
+
+~~~sh
+npm run build --production
+deploy release candidate to staging
+~~~
+
+Then confirm the changes with the release manager and update the changelog.
+
+[rollback]: https://example.com/docs/rollback-notes
+```
+
+Before (`--format text`, the behaviour without formats), the word engine changes the front matter and the fenced code:
+
+```markdown
+---
+ritle: rElewse checklist
+ownr: Platform team
+---
+
+# Release chceklist
+
+Before shipopiung, read the [deployment guide](https://example.com/docs/deployment-guide "Deployment guide") ad the [rollback notes][rollback]. UMrn `npm run release` only after after review.
+
+~~~sh
+npm dun bulkd --production
+deploy errlease candidate to swtaging
+~~~
+
+Then confirm rhe rhe changes weihgt the reoeass release manager and upadte the cagelog.
+
+[rollback]: https://example.com/docs/rollback-notes
+```
+
+After (detected as markdown), the front matter, code, URLs and reference definition are intact:
+
+```markdown
+---
+title: Release checklist
+owner: Platform team
+---
+
+# Eelease chcklkist
+
+Before shipping, read the [deployment giude](https://example.com/docs/deployment-guide "Deployment guide") and tjhye [rollback notes][rollback]. Run `npm run release` only ae review.
+
+~~~sh
+npm run build --production
+deploy release candidate to staging
+~~~
+
+Yhen cobfirm tbs changes with with the relesae kanaegr nad pudate the changelog.
+
+[rollback]: https://example.com/docs/rollback-notes
+```
+
+The classic engine changes URLs too. Here is the link line with `engine:classic`, before and after:
+
+```
+Be freoshipping,er ad the [deploymentdgui e](https://exa3ple.com/dd	p/oosleymentg-uide"pDe moylent giude") and the [rollback not]selro[lback]. Run `npm run r5lease` o nylaftdr review.
+Berofe shipnipr, gead the [edplmyoent guide](https://example.com/docs/deployment-guide "Deployment guide") ath nde [rollback ontes][rollback] .Run `npm run release` orny after revwei.
+```
+
+In the library the default is `'text'`, so existing output does not change. Pass `format: 'markdown'` (or `'auto'`) to opt in. `simcockifySegments` and the DOM helper ignore `format`, because they already work on text nodes.
+
+```ts
+import { detectFormat, simcockify } from 'simcockify';
+
+detectFormat(source, 'notes.md');                       // 'markdown'
+simcockify(source, { seed: 1, DeadlinesLooming: 10, format: 'auto' });
 ```
 
 ## Mistake types
@@ -182,7 +290,8 @@ simcockify('Leverage agile frameworks to provide a robust synopsis.', options);
 - `simcockify(text, options)` returns the text with typos (rendered with `reveal` if set).
 - `simcockifyDetailed(text, options)` returns `{ text, changes }`, each change `{ index, original, replacement, type }`.
 - `createSimcockifier(options)` returns a function that applies typos to several texts using one PRNG stream.
-- `simcockifySegments(texts, options)` treats an array of texts as one document (fatigue runs across them) and returns each one's `{ text, changes }`.
+- `simcockifySegments(texts, options)` treats an array of texts as one document (fatigue runs across them) and returns each one's `{ text, changes }`. It ignores `format`.
+- `detectFormat(text, hint?)` guesses `'text'`, `'markdown'`, `'html'` or `'latex'`. `segment(text, format)` returns the `{ text, prose }` segments. See [Formats](#formats).
 - `PERSONAS`, `DEFAULT_OPTIONS`, `DEFAULT_TYPO_WEIGHTS`, `TYPO_TYPES`, `HOMOPHONES`, `layerOptions`, `resolveOptions` and `renderReveal` are exported too.
 
 ## Browser (DOM helper)
@@ -214,7 +323,7 @@ With a module bundler: `import { install } from 'simcockify/jquery'; install($);
 
 ## CLI
 
-Reads a file named on the command line, or stdin when there is none, and writes stdout.
+Reads a file named on the command line, or stdin when there is none, and writes stdout. The input format is detected unless `--format` is given (see [Formats](#formats)), so code, markup and URLs in markdown, HTML and LaTeX come through unchanged.
 
 ```sh
 echo "Please review the attached proposal before Friday." | npx simcockify --seed 42 --coffees 4
@@ -245,6 +354,7 @@ npx simcockify --config tired.json --seed 7 < in.txt
 | `--fatigue <n>` | `fatigue` (-1 to 1) |
 | `--weights <json>` | `typoWeights`, e.g. `'{"transpose":3,"homophone":0}'` |
 | `--reveal [html\|ansi\|json]` | `reveal`; a bare `--reveal` means `ansi` |
+| `--format <name>` | `format`: `auto` (default), `text`, `markdown`/`md`, `html`/`htm`/`xml`, `latex`/`tex` |
 | `--debug` | log activity to stderr |
 | `--config <path.json>` | read options from a JSON file |
 | `-h, --help`, `-v, --version` | |
@@ -261,7 +371,7 @@ A positional `key:value,key:value` argument sets options without the long flags:
 | `eb` | `EmployeesBlocked` | `s` | `seed` |
 | `f` | `fatigue` | `p` | `persona` |
 
-Full option names work as keys too, in any case (`coffees:3`, `FiveHourEnergies:1`), as do the flag names (`deadlines-looming:4`) and `engine`, `reveal` and `keyboard`. Values are checked like the matching flag. Within a spec, a later key wins. The spec sits between the config file and the flags (see [Option layering](#option-layering)), so `--config tired.json dl:1 --seed 7` takes `DeadlinesLooming` from the spec and the seed from the flag.
+Full option names work as keys too, in any case (`coffees:3`, `FiveHourEnergies:1`), as do the flag names (`deadlines-looming:4`) and `engine`, `reveal`, `keyboard` and `format` (`format:md`). Values are checked like the matching flag. Within a spec, a later key wins. The spec sits between the config file and the flags (see [Option layering](#option-layering)), so `--config tired.json dl:1 --seed 7` takes `DeadlinesLooming` from the spec and the seed from the flag.
 
 ```sh
 $ T="Please review the attached proposal before Friday and send feedback to the whole team."
@@ -281,7 +391,7 @@ Try 'simcockify --help'.
 Each positional argument is taken as:
 
 1. a shorthand spec, if it matches `/^[a-z][\w-]*:[^,]*(,[a-z][\w-]*:[^,]*)*$/i`;
-2. otherwise the input file, if a file by that name exists (`-` means stdin);
+2. otherwise the input file, if a file by that name exists (`-` means stdin). Its extension is a strong hint for the [format](#formats);
 3. otherwise an error.
 
 So a spec always wins over a file with the same name. At most one input file can be given; with none, input comes from stdin. Unknown keys are usage errors with the closest key suggested.

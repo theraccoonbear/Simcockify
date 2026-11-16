@@ -23,7 +23,7 @@ Runs text through the `simcockify` CLI, which reads a named file (or stdin) and 
 5. Return the output. State the seed and options used so the run can be repeated.
 6. If asked what changed, rerun with the same seed and options plus `--reveal ansi` (terminal), `--reveal html` (spans with `title="was: …"`) or `--reveal json` (`{ text, changes: [{ index, original, replacement, type }] }`). Never pass reveal output on as the final text.
 
-The default (word) engine changes only words. It leaves URLs, emails, numbers, `@handles`, `#tags`, inline and fenced code, `snake_case`, `camelCase`, paths, file names, flags, short acronyms and words under three letters exactly as they are, and never splits emoji. Words inside HTML tags or other markup can still change, so mention this if the input has markup. Still do not run code or data that must stay exact through it.
+The default (word) engine changes only words. It leaves URLs, emails, numbers, `@handles`, `#tags`, inline and fenced code, `snake_case`, `camelCase`, paths, file names, flags, short acronyms and words under three letters exactly as they are, and never splits emoji. The CLI also detects the input format (markdown, HTML/XML, LaTeX or plain text) and gives typos to prose only. Code blocks, inline code, URLs, front matter, tags and attributes, math, comments and commands come through byte for byte. Pass the file as an argument, or name it with a matching extension when writing it to a temp file (`draft.md`, `page.html`, `paper.tex`), because the extension is a strong hint. Use `--format markdown|html|latex|text` (or `format:md` in the shorthand) when detection might guess wrong, for example a short markdown snippet with no headings, links or fences. Still do not run pure code or data that must stay exact through it.
 
 ## Options
 
@@ -33,13 +33,13 @@ Velocity (how far a typo lands from the intended key, plus a small frequency eff
 
 Style (word engine): `--persona <name>` (presets, see below), `--fatigue <-1..1>` (above 0 starts clean and ends messier, below 0 the reverse; default 0), `--weights '<json>'` (relative weight per mistake type: slip, transpose, double, drop, insert, apostrophe, homophone, duplicate, stickyShift, sentenceEnd; 0 turns a type off).
 
-Other: `--seed <value>`, `--config <file.json>` (shorthand and flags override it, it overrides the persona), `--keyboard QWERTY`, `--debug` (stderr), `--engine word|classic`. Use `--engine classic` only to reproduce output from 1.x or an earlier run made with it; it swaps characters across spaces and changes URLs and numbers.
+Other: `--format auto|text|markdown|html|latex` (default auto), `--seed <value>`, `--config <file.json>` (shorthand and flags override it, it overrides the persona), `--keyboard QWERTY`, `--debug` (stderr), `--engine word|classic`. Use `--engine classic` only to reproduce output from 1.x or an earlier run made with it; it swaps characters across spaces and changes URLs and numbers.
 
 Typos per word (the rate) is `(|sleep-8|/8 + deadlines/20 + blocked/15 + minutes/1440 + 0.5 if |2-coffees| + energies + espressos > 0) / 5`. With defaults this is 0.1; only `--coffees 2` with everything else default gives none. Velocity sets how far a key slip can land (4, the default and minimum, means adjacent keys only).
 
 ## Shorthand
 
-A positional `key:value,key:value` spec replaces the long flags: `c` Coffees, `e` Espressos, `fhe` FiveHourEnergies, `hos` HoursOfSleep, `mtc` MinutesTalkingToClients, `dl` DeadlinesLooming, `eb` EmployeesBlocked, `s` seed, `f` fatigue, `p` persona. Full option names (any case), flag names, `engine`, `reveal` and `keyboard` also work as keys. No spaces inside the spec. For example `--coffees 3 --hours-of-sleep 6 --deadlines-looming 5 --employees-blocked 3 --seed x` is `c:3,hos:6,dl:5,eb:3,s:x`. Explicit flags override the spec. A positional argument that is not a spec must be an existing file, which is read instead of stdin. An unknown key fails with a suggestion; fix it and rerun.
+A positional `key:value,key:value` spec replaces the long flags: `c` Coffees, `e` Espressos, `fhe` FiveHourEnergies, `hos` HoursOfSleep, `mtc` MinutesTalkingToClients, `dl` DeadlinesLooming, `eb` EmployeesBlocked, `s` seed, `f` fatigue, `p` persona. Full option names (any case), flag names, `engine`, `reveal`, `keyboard` and `format` also work as keys. No spaces inside the spec. For example `--coffees 3 --hours-of-sleep 6 --deadlines-looming 5 --employees-blocked 3 --seed x` is `c:3,hos:6,dl:5,eb:3,s:x`. Explicit flags override the spec. A positional argument that is not a spec must be an existing file, which is read instead of stdin. An unknown key fails with a suggestion; fix it and rerun.
 
 ## Intensity mapping
 
