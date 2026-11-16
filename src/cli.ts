@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { simcockify } from './core.js';
 import { KEYBOARD_MAPS } from './keyboard.js';
-import { NUMERIC_OPTIONS, SimcockifyOptions } from './options.js';
+import { Engine, ENGINES, NUMERIC_OPTIONS, SimcockifyOptions } from './options.js';
 
 const FLAGS: Record<(typeof NUMERIC_OPTIONS)[number], string> = {
 	FiveHourEnergies: 'five-hour-energies',
@@ -32,13 +32,15 @@ Frequency factors (how many typos):
 Other:
   --seed <value>                   seed for repeatable output (random if omitted)
   --keyboard <name>                keyboard layout: ${Object.keys(KEYBOARD_MAPS).join(', ')} (default QWERTY)
+  --engine <name>                  typo algorithm: ${ENGINES.join(', ')} (default ${ENGINES[0]});
+                                   classic is the 1.x algorithm, so old seeds reproduce
   --debug                          log activity to stderr
   --config <path.json>             read options from a JSON file; flags override it
   -h, --help                       show this help
   -v, --version                    show the version
 
 Config files use the option names: ${NUMERIC_OPTIONS.join(', ')},
-seed, keyboard, debug.
+seed, keyboard, debug, engine.
 `;
 
 export class UsageError extends Error {}
@@ -103,6 +105,11 @@ function applyValues(opts: SimcockifyOptions, values: Record<string, unknown>, s
 				throw new UsageError(`${source}keyboard must be one of: ${Object.keys(KEYBOARD_MAPS).join(', ')}`);
 			}
 			opts.keyboardType = KEYBOARD_MAPS[name as keyof typeof KEYBOARD_MAPS];
+		} else if (key === 'engine') {
+			if (typeof value !== 'string' || !(ENGINES as readonly string[]).includes(value)) {
+				throw new UsageError(`${source}engine must be one of: ${ENGINES.join(', ')}`);
+			}
+			opts.engine = value as Engine;
 		} else {
 			throw new UsageError(`unknown option ${source}${key}`);
 		}
@@ -119,6 +126,7 @@ export function run(argv: string[], io: CliIO): number {
 			seed: { type: 'string' },
 			keyboard: { type: 'string' },
 			debug: { type: 'boolean' },
+			engine: { type: 'string' },
 		};
 		for (const flag of Object.values(FLAGS)) options[flag] = { type: 'string' };
 
@@ -145,6 +153,7 @@ export function run(argv: string[], io: CliIO): number {
 		if (values.seed !== undefined) fromFlags.seed = values.seed;
 		if (values.keyboard !== undefined) fromFlags.keyboard = values.keyboard;
 		if (values.debug) fromFlags.debug = true;
+		if (values.engine !== undefined) fromFlags.engine = values.engine;
 		applyValues(opts, fromFlags, '--');
 
 		if (opts.debug) opts.logger = (m) => io.stderr(m + '\n');
