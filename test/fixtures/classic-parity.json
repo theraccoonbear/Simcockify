@@ -1,0 +1,751 @@
+{
+	"source": "typescript-cli @ 1a9d717",
+	"cases": [
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": "abc"
+			},
+			"output": "The quick brown fjx oumps over the lazy dog, reepatedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": 1
+			},
+			"output": "The quick brown  oxfjumps over the lazy dog, reepatedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": "parity"
+			},
+			"output": "The quick brown foxmju ps over the lazy do,g repeatedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": 42
+			},
+			"output": "The quicr bkown fox jumps over the lazy dog, repeatedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": "abc",
+				"Coffees": 2
+			},
+			"output": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": 1,
+				"Coffees": 2
+			},
+			"output": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": "parity",
+				"Coffees": 2
+			},
+			"output": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": 42,
+				"Coffees": 2
+			},
+			"output": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": "abc",
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "The quick brown fjx oumps over the lazy dog, peeratedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": 1,
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "The quick brown  oxfjumps over theylaz  dog, reepatedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": "parity",
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "The quick brown foxmju ps over the lazy do,g re7patedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": 42,
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "The quicr bkown fox jumps over the lazy god, repeatedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": "abc",
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "The quick brownxfj  oumps rvto ehe lazy dog, peeratedly and hitw feileng."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": 1,
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "Thu qei kcbrown  oxfjumps over tyhelaz  dog,ere patedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": "parity",
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "The quick wrobn fojmxu sp over the lazy do,g re7patedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": 42,
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "h eTquicr bkownof x jumps ov rethe lazy god, rtpeaeedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": "abc",
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "The quick brown fsx jumpo tver ohe lazy dop, reegatedly and eith fiwleng."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": 1,
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "The qu ckibrown mox jufps over yeh lazt dog,ereepat dly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": "parity",
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "The quick brown joxofumps  ver the lazy do,g re8patedly and with feeling."
+		},
+		{
+			"text": "The quick brown fox jumps over the lazy dog, repeatedly and with feeling.",
+			"options": {
+				"seed": 42,
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "hTe quicn browk fox jumps  verothe lazg dot, repeayedly and with feeling."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": "abc"
+			},
+			"output": "Leverage agile frameworks to provide a robust synipsos for high level overviews. Iterative approaches to corporate strategy fostc reollaborative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": 1
+			},
+			"output": "Leverage agile frameworks to provide a robustnsy opsis for high level overviews. Iterative approachescto  orporate strategy foster ocllaborative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": "parity"
+			},
+			"output": "Leverage agile frameworks to provide a robust synopsio fsr high level overviews. Iterative approaches to corporate startegy fos5tr collaborative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": 42
+			},
+			"output": "Leverage agile frameworts ko provide a robust synopsis for high level overviews. Iterative approaches to corpora etstrategy foster collaborative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": "abc",
+				"Coffees": 2
+			},
+			"output": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": 1,
+				"Coffees": 2
+			},
+			"output": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": "parity",
+				"Coffees": 2
+			},
+			"output": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": 42,
+				"Coffees": 2
+			},
+			"output": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": "abc",
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "Leverage agile frameworks to provide a robust synipsos for high level overviews. rteIative approaches to corporate strategy fostc reollaborative thinking to furtheh tre overall value prosopition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": 1,
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "Leverage agile frameworkt so provide a robustnsy opsis for high level overviews. Iterative paproachescto  orporate strat gyefoster ocllaborative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": "parity",
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "Leverage agile frameworks to provide a robust synopsif osr high level overviews. Iterative approaches to corporate startegy fos5tr collaborative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": 42,
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "Levearge agile frameworts ko provide a robust synopsis for high level overviews.tI erative approaches to corpora etstrategy foster cbllaoorative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": "abc",
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "Leverage agile frameworks to provdie a robust spniysos for higv lehel ovfrvi.w esrteIativp aperoachfs to corporate strategy fostc reollaborative thinking to furtheh tre overall value prosopition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": 1,
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "Leverage agife lrameworkt so provide a robustnsy opsis aor high level overviews. Iterative paorpachescto  orporate strat goefyster ocllaborative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": "parity",
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "veLerage agile fraemworks to prov deia robust synopsif osr high elvel rveoviews. Iterative apcroaphes th corporate startegy fos5tr cbllaoorative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": 42,
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "Leveargega ile frameworts ko provide a robtsu nysopsis f rohigh level overviews.tI erative approaches ot corporate strateyg foster cbllaoorative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": "abc",
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "Leverage agile frameworks to prov deia robusp synotsis for high level ov\\rriewev Its.ative approaches to corporate strategy fcste roollaborative thinking to furthev the orerall value prspooition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": 1,
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "Leverage afile gramewo ts korprovide a robustssynop is \\or high level overviews. Iterative popraacces to horporate strattge foseyr ocllaborative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": "parity",
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "veLerage agile frawemorks to p ovidera robust synopfii sor hsgh eevll overviews. Iterative approaches to corporate startegy fos7tb collarorative thinking to further the overall value proposition."
+		},
+		{
+			"text": "Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition.",
+			"options": {
+				"seed": 42,
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "Levaregg aeile frameworps to krovide a rnbuso sytopsis fgr hioh level overviewt. Iserative approaches to corpo arersttategy fostbr collaeorative thinking to further the overall value proposition."
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": "abc"
+			},
+			"output": "  Their report, sent to ptths://example.com/x?y=1 and bob@exapmle.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": 1
+			},
+			"output": "  Their report, sent tt hotps://example.com/x?y=1 and bob@examlpe.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": "parity"
+			},
+			"output": "  Their report, sent to ht:pst//example.com/x?y=1 and bbo@example.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": 42
+			},
+			"output": "  Their repo t,rsent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": "abc",
+				"Coffees": 2
+			},
+			"output": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": 1,
+				"Coffees": 2
+			},
+			"output": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": "parity",
+				"Coffees": 2
+			},
+			"output": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": 42,
+				"Coffees": 2
+			},
+			"output": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": "abc",
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "  Their report, sent to ptths://example.com/x?y=1 and bob@emapxle.com, is due at 3pm (srahp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": 1,
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "  Their reptro, sent tt hotps://example.com/x?a=1 ynd bob@examlpe.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": "parity",
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "  Their report, sent to hp:tst//example.com/x?y=1 and bbo@exarmle.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": 42,
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "  hTeir repo t,rsent to https://example.com/x?y=1 andob b@example.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": "abc",
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "  Their report, sent tt poths://exaepcl.mom/x?y=1 and bob@emapxle.com, is due at 3pm (srahp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": 1,
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "  Therr ieptro, sent tt hotps://example.com?/xa=1 ynd bobamx@elpe.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": "parity",
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "  Their report,nse t to hp:tst/e/xample.com/x?y=1 and bbo@exarmle.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": 42,
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "  hTrie repo t,rsent th ottps://examplc.eom/x?y=1 and bob@exa.plemcom, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": "abc",
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "  Their report, sent to /ttps:/hexacple.mom/x?y=1 and bom@exapble.com, is due at 3pm (rhasp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": 1,
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "  Treir hetorp, sent ts httpo://example.comxa?y=1 /nd bobeexamlp@.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": "parity",
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "  Their repont, sert tophtx s://etample.com/x?y=1 and bbo@exa7mle.com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "  Their report, sent to https://example.com/x?y=1 and bob@example.com, is due at 3pm (sharp)!  \n",
+			"options": {
+				"seed": 42,
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "  hreiT repont, sert to https://examcle.pom/x?y=1 aod bnb.example@com, is due at 3pm (sharp)!  \n"
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": "abc"
+			},
+			"output": "Don't worry;'it s fine. Café naïve\ud83d \ude00 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": 1
+			},
+			"output": "Don't worryt i;'s fine. Café naïve\ud83d \ude00 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": "parity"
+			},
+			"output": "Don't worry; i 'stfine. Café navïe 😀 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": 42
+			},
+			"output": "Don'trwo ry; it's fine. Café naïve 😀 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": "abc",
+				"Coffees": 2
+			},
+			"output": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": 1,
+				"Coffees": 2
+			},
+			"output": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": "parity",
+				"Coffees": 2
+			},
+			"output": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": 42,
+				"Coffees": 2
+			},
+			"output": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": "abc",
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "Don't worry;'it s fine. Café naï e\ud83dv\ude00 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": 1,
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "Don't worryt i;'s fine.  aféCnaïve\ud83d \ude00 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": "parity",
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "Don't worrh; i 'stfine. Café navïe 😀 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": 42,
+				"Coffees": 5,
+				"HoursOfSleep": 4
+			},
+			"output": "Don'trwo ry; it's fine. Café ïanve 😀 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": "abc",
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "Don't worri;'yt s f.nei Café naï e\ud83dv\ude00 emoji \udffd\udc4d\ud83c\ud83d rehe."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": 1,
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "'onDw torryt i;'s fine.  aféCnaï e\ud83dv\ude00 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": "parity",
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "Don't owrrh; i ts'finef Ca. énavïe 😀 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": 42,
+				"DeadlinesLooming": 20,
+				"EmployeesBlocked": 15
+			},
+			"output": "noD'trwo ry; it's fi.en Café ïanv  😀eemoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": "abc",
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "Don't worry;iit's f ne. Café  aïve\ud83dn\ude00 emoji  \udc4d🏽rhe\ud83de."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": 1,
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "Donwt 'orry  it's;fin . Caféenaïme\ud83d \ude00 evoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": "parity",
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "Don't worrk; iens fi't. Cafn éavïe 😀 emoji 👍🏽 here."
+		},
+		{
+			"text": "Don't worry; it's fine. Café naïve 😀 emoji 👍🏽 here.",
+			"options": {
+				"seed": 42,
+				"Espressos": 10,
+				"FiveHourEnergies": 8,
+				"Coffees": 9,
+				"HoursOfSleep": 1,
+				"MinutesTalkingToClients": 600
+			},
+			"output": "Don't;worry  it's fine. Cafï  aéve 😀nemoji 👍🏽 here."
+		}
+	],
+	"dom": [
+		{
+			"html": "<div id=\"r\"><p>Leverage agile frameworks to provide a robust <a href=\"#\">synopsis</a> for overviews.</p>\n<p class=\"no-simcockify\">Leave this alone.</p><p>Iterative approaches to corporate strategy foster thinking.</p></div>",
+			"options": {
+				"seed": "x",
+				"DeadlinesLooming": 15
+			},
+			"innerHTML": "<p>Leverega agile frameworks to provide a robust <a href=\"#\">spnoysis</a> for overviews.</p>\n<p class=\"no-simcockify\">Leave this alone.</p><p>Iterative approaches to corporate sttaregy foster thinking.</p>"
+		},
+		{
+			"html": "<div id=\"r\"><p>Leverage agile frameworks to provide a robust <a href=\"#\">synopsis</a> for overviews.</p>\n<p class=\"no-simcockify\">Leave this alone.</p><p>Iterative approaches to corporate strategy foster thinking.</p></div>",
+			"options": {
+				"seed": "s",
+				"DeadlinesLooming": 15
+			},
+			"innerHTML": "<p>Leverage agilr feameworks to porvide a robust <a href=\"#\">spnoysis</a> f5r overviews.</p>\n<p class=\"no-simcockify\">Leave this alone.</p><p>Iterative approaches to ocrporate strategy foster thinking.</p>"
+		},
+		{
+			"html": "<div id=\"r\"><p>Leverage agile frameworks to provide a robust <a href=\"#\">synopsis</a> for overviews.</p>\n<p class=\"no-simcockify\">Leave this alone.</p><p>Iterative approaches to corporate strategy foster thinking.</p></div>",
+			"options": {
+				"seed": 7,
+				"DeadlinesLooming": 15
+			},
+			"innerHTML": "<p>Leverage agife lramework sto provide a robust <a href=\"#\">syno5sis</a> f rooverviews.</p>\n<p class=\"no-simcockify\">Leave this alone.</p><p>Iterative apporaches to corporate strategy foster thinknig.</p>"
+		}
+	]
+}

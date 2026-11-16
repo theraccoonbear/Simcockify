@@ -17,7 +17,7 @@ function setup() {
 
 test('simcockifyElement alters text, keeps markup and excluded nodes', () => {
 	const { root } = setup();
-	simcockifyElement(root, { seed: 's', DeadlinesLooming: 15 });
+	simcockifyElement(root, { seed: 's', DeadlinesLooming: 20, EmployeesBlocked: 15 });
 	assert.notEqual(root.textContent, setup().root.textContent);
 	assert.equal(root.querySelectorAll('a').length, 1);
 	assert.equal(root.querySelector('.no-simcockify').textContent, 'Leave this paragraph exactly alone, please.');
@@ -46,4 +46,14 @@ test('jQuery adapter registers $.fn.simcockify and $.seedPRNG', () => {
 	$2('#r').simcockify({ DeadlinesLooming: 15 });
 	assert.equal(again.root.innerHTML, first);
 	assert.notEqual(first, setup().root.innerHTML);
+});
+
+test('simcockifyElement: classic engine and word engine both work; protected tokens in nodes survive', () => {
+	const dom = new JSDOM('<div id="r"><p>Visit https://example.com/a-b or mail bob@example.com about item 42.</p><p>Leverage agile frameworks to provide a robust synopsis.</p></div>');
+	const root = dom.window.document.getElementById('r');
+	simcockifyElement(root, { seed: 3, DeadlinesLooming: 20, EmployeesBlocked: 15 });
+	assert.match(root.textContent, /https:\/\/example\.com\/a-b/);
+	assert.match(root.textContent, /bob@example\.com/);
+	assert.match(root.textContent, / 42\./);
+	assert.equal(root.querySelectorAll('p').length, 2);
 });

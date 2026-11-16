@@ -1,6 +1,12 @@
-export { simcockify, createSimcockifier } from './core.js';
-export { DEFAULT_OPTIONS, NUMERIC_OPTIONS } from './options.js';
-export type { SimcockifyOptions } from './options.js';
-export { KEYBOARD_MAPS, accessibleKeys } from './keyboard.js';
-export type { KeyboardMap } from './keyboard.js';
-export { createRandom, hashCode } from './random.js';
+export { simcockify, createSimcockifier, simcockifySegments } from './core.js';
+export type { Change, SegmentResult } from './core.js';
+export { TYPO_TYPES } from './mutations.js';
+export type { TypoType } from './mutations.js';
+export { TYPO_WEIGHTS } from './engine.js';
+export { DEFAULT_OPTIONS, NUMERIC_OPTIONS, ENGINES, typoRate, typoVelocity } from './options.js';
+export type { SimcockifyOptions, Engine } from './options.js';
+export { KEYBOARD_MAPS, accessibleKeys, nearbyKeys } from './keyboard.js';
+export type { KeyboardMap, NearbyKey } from './keyboard.js';
+export { createRandom, createSeededRandom, hashCode } from './random.js';
+export { tokenize, isProtectedChunk } from './tokenize.js';
+export type { Token, TokenKind } from './tokenize.js';

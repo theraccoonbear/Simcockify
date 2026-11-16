@@ -77,3 +77,17 @@ test('--debug logs to stderr, not stdout', () => {
 	assert.match(r.stderr, /TEXT:/);
 	assert.doesNotMatch(r.stdout, /TEXT:/);
 });
+
+test('--engine classic reproduces the 1.x output; word is the default', () => {
+	const args = ['--seed', 'abc', '--coffees', '5', '--hours-of-sleep', '4'];
+	const classic = cli([...args, '--engine', 'classic']);
+	assert.equal(classic.status, 0);
+	assert.equal(classic.stdout, simcockify(TEXT, { seed: 'abc', Coffees: 5, HoursOfSleep: 4, engine: 'classic' }));
+	assert.equal(cli(args).stdout, simcockify(TEXT, { seed: 'abc', Coffees: 5, HoursOfSleep: 4, engine: 'word' }));
+	assert.equal(cli(['--config', config({ seed: 'abc', Coffees: 5, HoursOfSleep: 4, engine: 'classic' })]).stdout, classic.stdout);
+	assert.equal(cli(['--config', config({ engine: 'classic' }), '--engine', 'word', ...args]).stdout, cli(args).stdout);
+	const bad = cli(['--engine', 'fancy']);
+	assert.equal(bad.status, 2);
+	assert.match(bad.stderr, /engine must be one of: word, classic/);
+	assert.match(cli(['--help'], '').stdout, /--engine <name>/);
+});
