@@ -164,3 +164,39 @@ test('fatigue spans all segments in order (as for the text nodes of an element)'
 	const last = counts.slice(20).reduce((a, b) => a + b, 0);
 	assert.ok(last > 2 * first, `first ten ${first}, last ten ${last}`);
 });
+
+// --- personas and layering ---
+
+test('personas: about six presets, each changes the output and is listed', async () => {
+	const { PERSONAS, PERSONA_NAMES } = await import('../dist/index.js');
+	assert.deepEqual(PERSONA_NAMES, Object.keys(PERSONAS));
+	for (const name of ['well-rested', 'monday-morning', 'friday-afternoon', 'post-launch', 'client-call', 'caffeinated']) {
+		assert.ok(PERSONAS[name]?.description, name);
+	}
+	const long = PROSE.repeat(4);
+	const changes = (persona) => detailed(long, { seed: 'p', persona }).changes.length;
+	assert.ok(changes('well-rested') < changes('post-launch'));
+	assert.ok(changes('well-rested') <= 3, `well-rested is near-clean: ${changes('well-rested')}`);
+});
+
+test('persona layering: { ...defaults, ...persona, ...options }', async () => {
+	const { PERSONAS, layerOptions, DEFAULT_OPTIONS } = await import('../dist/index.js');
+	const p = PERSONAS['post-launch'].options;
+	// Applying a persona equals spreading its values by hand.
+	assert.equal(simcockify(PROSE, { seed: 'L', persona: 'post-launch' }), simcockify(PROSE, { seed: 'L', ...p }));
+	// Explicit options override the persona; unset (undefined) ones do not.
+	const r = resolveOptions({ persona: 'post-launch', HoursOfSleep: 8, fatigue: undefined, typoWeights: { double: 0 } });
+	assert.equal(r.HoursOfSleep, 8);
+	assert.equal(r.EmployeesBlocked, p.EmployeesBlocked);
+	assert.equal(r.fatigue, p.fatigue);
+	// Weights layer per key: default -> persona -> explicit.
+	assert.equal(r.typoWeights.double, 0);
+	assert.equal(r.typoWeights.insert, p.typoWeights.insert);
+	assert.equal(r.typoWeights.slip, DEFAULT_TYPO_WEIGHTS.slip);
+	// layerOptions is plain spreads, lowest first.
+	const l = layerOptions(DEFAULT_OPTIONS, { Coffees: 1, seed: 'a' }, { Coffees: 3 }, { seed: 'b' });
+	assert.equal(l.Coffees, 3);
+	assert.equal(l.seed, 'b');
+	assert.equal(l.HoursOfSleep, DEFAULT_OPTIONS.HoursOfSleep);
+	assert.throws(() => simcockify('x', { persona: 'nobody' }), /unknown persona "nobody"/);
+});

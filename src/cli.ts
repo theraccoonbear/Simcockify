@@ -1,8 +1,21 @@
 import { readFileSync } from 'node:fs';
 import { parseArgs } from 'node:util';
-import { simcockify } from './core.js';
+import { layerOptions, personaOptions, simcockify } from './core.js';
 import { KEYBOARD_MAPS } from './keyboard.js';
-import { Engine, ENGINES, NUMERIC_OPTIONS, SimcockifyOptions, TYPO_TYPES, TypoWeights } from './options.js';
+import {
+	DEFAULT_OPTIONS,
+	DEFAULT_TYPO_WEIGHTS,
+	Engine,
+	ENGINES,
+	NUMERIC_OPTIONS,
+	readConditions,
+	SimcockifyOptions,
+	TYPO_TYPES,
+	TypoWeights,
+	typoRate,
+	typoVelocity,
+} from './options.js';
+import { PERSONAS } from './personas.js';
 
 const FLAGS: Record<(typeof NUMERIC_OPTIONS)[number], string> = {
 	FiveHourEnergies: 'five-hour-energies',
@@ -34,16 +47,21 @@ Other:
   --keyboard <name>                keyboard layout: ${Object.keys(KEYBOARD_MAPS).join(', ')} (default QWERTY)
   --engine <name>                  typo algorithm: ${ENGINES.join(', ')} (default ${ENGINES[0]});
                                    classic is the 1.x algorithm, so old seeds reproduce
+  --persona <name>                 preset conditions, weights and fatigue (see --list-personas)
   --fatigue <n>                    -1..1; >0 starts clean and ends messier, <0 the reverse (default 0)
   --weights <json>                 relative typo weights (word engine), e.g. '{"transpose":3,"homophone":0}'
                                    types: ${TYPO_TYPES.join(', ')}
   --debug                          log activity to stderr
   --config <path.json>             read options from a JSON file; flags override it
+  --list-personas                  list the personas and exit
   -h, --help                       show this help
   -v, --version                    show the version
 
 Config files use the option names: ${NUMERIC_OPTIONS.join(', ')},
-seed, keyboard, debug, engine, fatigue, typoWeights (an object of typo weights).
+seed, keyboard, debug, engine, persona, fatigue, typoWeights (an object of typo weights).
+
+Options are layered lowest first: defaults, then the persona, then the
+config file, then flags. Typo weights layer per key.
 `;
 
 export class UsageError extends Error {}
@@ -142,12 +160,34 @@ function applyValues(opts: SimcockifyOptions, values: Record<string, unknown>, s
 			if (n < -1 || n > 1) throw new UsageError(`${source}fatigue must be between -1 and 1`);
 			opts.fatigue = n;
 		} else if (key === 'typoWeights') {
-			// Merged key by key, so --weights adjusts the config file's weights.
-			opts.typoWeights = { ...opts.typoWeights, ...weightsFrom(`${source}typoWeights`, value) };
+			opts.typoWeights = weightsFrom(`${source}typoWeights`, value);
+		} else if (key === 'persona') {
+			if (typeof value !== 'string' || !(value in PERSONAS)) {
+				throw new UsageError(`${source}persona must be one of: ${Object.keys(PERSONAS).join(', ')}`);
+			}
+			opts.persona = value;
 		} else {
 			throw new UsageError(`unknown option ${source}${key}`);
 		}
 	}
+}
+
+/** Lists the personas with their typo rate, velocity, fatigue and non-default weights. */
+function listPersonas(): string {
+	const lines: string[] = [];
+	for (const [name, p] of Object.entries(PERSONAS)) {
+		const c = readConditions(p.options);
+		const weights = Object.entries(p.options.typoWeights ?? {})
+			.filter(([k, v]) => DEFAULT_TYPO_WEIGHTS[k as keyof typeof DEFAULT_TYPO_WEIGHTS] !== v)
+			.map(([k, v]) => `${k} ${v}`)
+			.join(', ');
+		lines.push(`${name}\n  ${p.description}`);
+		lines.push(
+			`  rate ${typoRate(c).toFixed(2)}/word, velocity ${typoVelocity(c)}, fatigue ${p.options.fatigue ?? 0}` +
+				(weights ? `; weights: ${weights}` : ''),
+		);
+	}
+	return lines.join('\n') + '\n';
 }
 
 /** Runs the CLI and returns the process exit code. */
@@ -163,6 +203,8 @@ export function run(argv: string[], io: CliIO): number {
 			engine: { type: 'string' },
 			weights: { type: 'string' },
 			fatigue: { type: 'string' },
+			persona: { type: 'string' },
+			'list-personas': { type: 'boolean' },
 		};
 		for (const flag of Object.values(FLAGS)) options[flag] = { type: 'string' };
 
@@ -176,10 +218,14 @@ export function run(argv: string[], io: CliIO): number {
 			io.stdout(version() + '\n');
 			return 0;
 		}
+		if (values['list-personas']) {
+			io.stdout(listPersonas());
+			return 0;
+		}
 
-		const opts: SimcockifyOptions = {};
+		const configFile: SimcockifyOptions = {};
 		if (typeof values.config === 'string') {
-			applyValues(opts, loadConfig(values.config), `${values.config}: `);
+			applyValues(configFile, loadConfig(values.config), `${values.config}: `);
 		}
 
 		const fromFlags: Record<string, unknown> = {};
@@ -191,8 +237,14 @@ export function run(argv: string[], io: CliIO): number {
 		if (values.debug) fromFlags.debug = true;
 		if (values.engine !== undefined) fromFlags.engine = values.engine;
 		if (values.fatigue !== undefined) fromFlags.fatigue = values.fatigue;
+		if (values.persona !== undefined) fromFlags.persona = values.persona;
 		if (typeof values.weights === 'string') fromFlags.typoWeights = parseWeightsFlag(values.weights);
-		applyValues(opts, fromFlags, '--');
+		const flags: SimcockifyOptions = {};
+		applyValues(flags, fromFlags, '--');
+
+		// Lowest priority first: { ...DEFAULT_OPTIONS, ...persona, ...configFile, ...flags }.
+		const persona = personaOptions(flags.persona ?? configFile.persona);
+		const opts = layerOptions(DEFAULT_OPTIONS, persona, configFile, flags);
 
 		if (opts.debug) opts.logger = (m) => io.stderr(m + '\n');
 

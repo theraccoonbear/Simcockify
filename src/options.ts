@@ -31,7 +31,9 @@ export interface SimcockifyOptions {
 	 * 0 (default) is off. Word engine only.
 	 */
 	fatigue?: number;
-	/** Relative weights of the mistake types (word engine only); merged over the defaults. */
+	/** Name of a preset in `PERSONAS`; it sits between the defaults and the explicit options. */
+	persona?: string;
+	/** Relative weights of the mistake types (word engine only); merged per key over lower layers. */
 	typoWeights?: TypoWeights;
 	/** Physical keyboard layout used to pick neighbouring keys. */
 	keyboardType?: KeyboardMap;
@@ -80,6 +82,7 @@ export const DEFAULT_OPTIONS = {
 	debug: false,
 	engine: 'word' as Engine,
 	fatigue: 0,
+	typoWeights: DEFAULT_TYPO_WEIGHTS,
 	FiveHourEnergies: 0,
 	Espressos: 0,
 	Coffees: 0,

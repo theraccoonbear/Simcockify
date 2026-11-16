@@ -11,28 +11,65 @@ import {
 	SimcockifyOptions,
 	TypoType,
 	TYPO_TYPES,
+	TypoWeights,
 	typoRate,
 	typoVelocity,
 } from './options.js';
+import { PERSONAS } from './personas.js';
 import { createRandom, createSeededRandom } from './random.js';
 
 export type { Change, SegmentResult } from './engine.js';
 
 type SegmentsRunner = (segments: string[]) => SegmentResult[];
 
+/** The options a persona contributes; `{}` when `name` is undefined. Throws on an unknown name. */
+export function personaOptions(name: string | undefined): SimcockifyOptions {
+	if (name === undefined) return {};
+	const persona = PERSONAS[name];
+	if (!persona) throw new Error(`unknown persona "${name}"; choose one of: ${Object.keys(PERSONAS).join(', ')}`);
+	return persona.options;
+}
+
+function withoutUndefined(o: SimcockifyOptions): SimcockifyOptions {
+	return Object.fromEntries(Object.entries(o).filter(([, v]) => v !== undefined));
+}
+
 /**
- * Validates the options and fills in the typo weights: `typoWeights` is
- * merged key by key over the defaults. Throws on an unknown engine or
- * weight name, or a negative weight.
+ * Layers option objects, lowest priority first, with plain object spreads:
+ *
+ *     layerOptions(DEFAULT_OPTIONS, persona, configFile, flags)
+ *       = { ...DEFAULT_OPTIONS, ...persona, ...configFile, ...flags }
+ *
+ * Two details: keys set to `undefined` do not override lower layers, and
+ * `typoWeights` is spread per key in the same order, so a layer can change
+ * one weight without restating the rest.
+ */
+export function layerOptions(...layers: (SimcockifyOptions | undefined)[]): SimcockifyOptions {
+	let out: SimcockifyOptions = {};
+	let weights: TypoWeights = {};
+	for (const layer of layers) {
+		if (!layer) continue;
+		const defined = withoutUndefined(layer);
+		out = { ...out, ...defined };
+		weights = { ...weights, ...defined.typoWeights };
+	}
+	return { ...out, typoWeights: weights };
+}
+
+/**
+ * Resolves options as `{ ...DEFAULT_OPTIONS, ...PERSONAS[options.persona], ...options }`
+ * (see `layerOptions`) and validates the result. Throws on an unknown
+ * persona, engine or weight name, or a negative weight.
  */
 export function resolveOptions(options: SimcockifyOptions = {}): SimcockifyOptions & {
 	typoWeights: Record<TypoType, number>;
 } {
-	if (options.engine !== undefined && !ENGINES.includes(options.engine)) {
-		throw new Error(`unknown engine "${options.engine}"; choose one of: ${ENGINES.join(', ')}`);
+	const o = layerOptions(DEFAULT_OPTIONS, personaOptions(options.persona), options);
+	if (o.engine !== undefined && !ENGINES.includes(o.engine)) {
+		throw new Error(`unknown engine "${o.engine}"; choose one of: ${ENGINES.join(', ')}`);
 	}
 	const weights = { ...DEFAULT_TYPO_WEIGHTS };
-	for (const [k, v] of Object.entries(options.typoWeights ?? {})) {
+	for (const [k, v] of Object.entries(o.typoWeights ?? {})) {
 		if (!(TYPO_TYPES as readonly string[]).includes(k)) {
 			throw new Error(`unknown typo weight "${k}"; choose from: ${TYPO_TYPES.join(', ')}`);
 		}
@@ -40,7 +77,7 @@ export function resolveOptions(options: SimcockifyOptions = {}): SimcockifyOptio
 		if (!Number.isFinite(n) || n < 0) throw new Error(`typo weight "${k}" must be a number >= 0`);
 		weights[k as TypoType] = n;
 	}
-	return { ...options, typoWeights: weights };
+	return { ...o, typoWeights: weights };
 }
 
 /**

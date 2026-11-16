@@ -1,6 +1,8 @@
-export { simcockify, createSimcockifier, simcockifySegments, resolveOptions } from './core.js';
+export { simcockify, createSimcockifier, simcockifySegments, resolveOptions, layerOptions, personaOptions } from './core.js';
 export type { Change, SegmentResult } from './core.js';
 export { HOMOPHONES } from './mutations.js';
+export { PERSONAS, PERSONA_NAMES } from './personas.js';
+export type { Persona } from './personas.js';
 export {
 	DEFAULT_OPTIONS,
 	DEFAULT_TYPO_WEIGHTS,

@@ -118,3 +118,34 @@ test('--fatigue and config fatigue', () => {
 	assert.equal(cli(['--config', config({ seed: 'f', DeadlinesLooming: 8, fatigue: 0.7 })], long).stdout, r.stdout);
 	for (const bad of ['2', '-1.5', 'tired']) assert.equal(cli(['--fatigue', bad]).status, 2, bad);
 });
+
+test('--persona and --list-personas; precedence is flags, then config, then persona', async () => {
+	const { PERSONAS } = await import('../dist/index.js');
+	const list = cli(['--list-personas'], '');
+	assert.equal(list.status, 0);
+	for (const name of Object.keys(PERSONAS)) assert.match(list.stdout, new RegExp(`^${name}$`, 'm'));
+	assert.match(list.stdout, /rate \d\.\d\d\/word/);
+
+	const r = cli(['--seed', 'p', '--persona', 'post-launch']);
+	assert.equal(r.status, 0);
+	assert.equal(r.stdout, simcockify(TEXT, { seed: 'p', persona: 'post-launch' }));
+	// Config overrides persona; flags override config.
+	const p = config({ seed: 'p', persona: 'post-launch', HoursOfSleep: 8, typoWeights: { double: 0 } });
+	assert.equal(
+		cli(['--config', p]).stdout,
+		simcockify(TEXT, { seed: 'p', persona: 'post-launch', HoursOfSleep: 8, typoWeights: { double: 0 } }),
+	);
+	assert.equal(
+		cli(['--config', p, '--hours-of-sleep', '2', '--weights', '{"insert":0}']).stdout,
+		simcockify(TEXT, { seed: 'p', persona: 'post-launch', HoursOfSleep: 2, typoWeights: { double: 0, insert: 0 } }),
+	);
+	// A persona flag replaces the config file's persona; config values still override it.
+	assert.equal(
+		cli(['--config', p, '--persona', 'caffeinated']).stdout,
+		simcockify(TEXT, { seed: 'p', persona: 'caffeinated', HoursOfSleep: 8, typoWeights: { double: 0 } }),
+	);
+	const bad = cli(['--persona', 'nobody']);
+	assert.equal(bad.status, 2);
+	assert.match(bad.stderr, /persona must be one of: well-rested/);
+	assert.match(cli(['--help'], '').stdout, /--list-personas/);
+});
