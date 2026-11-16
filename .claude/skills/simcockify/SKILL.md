@@ -21,7 +21,7 @@ Runs text through the `simcockify` CLI, which reads stdin and writes stdout. Out
    Inside this repository, use the local build instead: `timeout 30 node bin/simcockify.js ...` (run `npm install && npm run build` first if `dist/` is missing).
 5. Return the output. State the seed and options used so the run can be repeated.
 
-Do not apply it to code, URLs, commands or data that must stay exact, unless asked. Markdown or HTML markup can be mangled by typos; mention this if the input has markup.
+The default (word) engine changes only words. It leaves URLs, emails, numbers, `@handles`, `#tags`, inline and fenced code, `snake_case`, `camelCase`, paths, file names, flags, short acronyms and words under three letters exactly as they are, and never splits emoji. Words inside HTML tags or other markup can still change, so mention this if the input has markup. Still do not run code or data that must stay exact through it.
 
 ## Options
 
@@ -29,9 +29,9 @@ Frequency (how many typos): `--hours-of-sleep` (default 8, distance from 8 matte
 
 Velocity (how far a typo lands from the intended key, plus a small frequency effect): `--coffees` (default 0, neutral is 2), `--espressos`, `--five-hour-energies` (default 0).
 
-Other: `--seed <value>`, `--config <file.json>` (flags override it), `--keyboard QWERTY`, `--debug` (stderr).
+Other: `--seed <value>`, `--config <file.json>` (flags override it), `--keyboard QWERTY`, `--debug` (stderr), `--engine word|classic`. Use `--engine classic` only to reproduce output from 1.x or an earlier run made with it; it swaps characters across spaces and changes URLs and numbers.
 
-Typos per word is `(|sleep-8|/8 + deadlines/20 + blocked/15 + minutes/1440 + 0.5 if |2-coffees| + energies + espressos > 0) / 5`. With defaults this is 0.1; only `--coffees 2` with everything else default gives none.
+Typos per word (the rate) is `(|sleep-8|/8 + deadlines/20 + blocked/15 + minutes/1440 + 0.5 if |2-coffees| + energies + espressos > 0) / 5`. With defaults this is 0.1; only `--coffees 2` with everything else default gives none. Velocity sets how far a key slip can land (4, the default and minimum, means adjacent keys only).
 
 ## Intensity mapping
 
@@ -43,7 +43,7 @@ Typos per word is `(|sleep-8|/8 + deadlines/20 + blocked/15 + minutes/1440 + 0.5
 | heavy | `--coffees 5 --hours-of-sleep 4 --deadlines-looming 10 --employees-blocked 8 --espressos 2` | 0.4 |
 | extreme | `--coffees 6 --five-hour-energies 3 --hours-of-sleep 2 --deadlines-looming 20 --employees-blocked 15 --minutes-talking-to-clients 240` | 0.7 |
 
-The number of typos is the word count times this rate, rounded up, so any non-zero rate changes short texts too.
+Each word gets about `rate` typos on average, with no minimum, so a short text at a light intensity may come back unchanged; try another seed or a higher intensity if a visible change is wanted.
 
 ## Errors
 
