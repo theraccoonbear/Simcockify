@@ -1,0 +1,58 @@
+{
+	"name": "simcockify",
+	"version": "2.0.0",
+	"description": "Inject human-style typos into text, with a seeded PRNG for repeatable output.",
+	"license": "MIT",
+	"type": "module",
+	"main": "./dist/index.js",
+	"types": "./dist/index.d.ts",
+	"exports": {
+		".": {
+			"types": "./dist/index.d.ts",
+			"default": "./dist/index.js"
+		},
+		"./dom": {
+			"types": "./dist/dom.d.ts",
+			"default": "./dist/dom.js"
+		},
+		"./jquery": {
+			"types": "./dist/jquery.d.ts",
+			"default": "./dist/jquery.js"
+		},
+		"./browser": "./dist/simcockify.browser.js",
+		"./package.json": "./package.json"
+	},
+	"bin": {
+		"simcockify": "./bin/simcockify.js"
+	},
+	"files": [
+		"dist",
+		"bin",
+		"README.md"
+	],
+	"engines": {
+		"node": ">=18.3"
+	},
+	"scripts": {
+		"build": "npm run build:tsc && npm run build:browser",
+		"build:tsc": "tsc -p tsconfig.json",
+		"build:browser": "node scripts/build-browser.mjs",
+		"test": "npm run build && node --test test/",
+		"prepare": "npm run build"
+	},
+	"peerDependencies": {
+		"jquery": ">=1.7"
+	},
+	"peerDependenciesMeta": {
+		"jquery": {
+			"optional": true
+		}
+	},
+	"devDependencies": {
+		"@types/node": "^26.6.6",
+		"esbuild": "^0.28.2",
+		"jquery": "^4.0.0",
+		"jsdom": "^31.0.1",
+		"typescript": "^7.0.2"
+	}
+}
