@@ -23,3 +23,14 @@ test('classic engine reproduces recorded DOM output', () => {
 		assert.equal(el.innerHTML, c.innerHTML, JSON.stringify(c.options));
 	}
 });
+
+test('classic typo selection stays in bounds for extreme random values', () => {
+	const text = 'Leverage agile frameworks to provide a robust synopsis.';
+	// Constant rolls at and around each cumulative boundary (0.05, 0.95) and the top of [0, 1).
+	for (const roll of [0, 0.049999, 0.05, 0.050001, 0.5, 0.949999, 0.95, 0.950001, 0.999999999]) {
+		const out = simcockify(text, { random: () => roll, engine: 'classic', DeadlinesLooming: 20 });
+		assert.equal(typeof out, 'string', `roll ${roll}`);
+		assert.equal(out.length, text.length, `roll ${roll}`);
+		assert.equal(out, simcockify(text, { random: () => roll, engine: 'classic', DeadlinesLooming: 20 }));
+	}
+});

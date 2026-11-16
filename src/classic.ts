@@ -84,6 +84,10 @@ export function createClassicSimcockifier(
 		},
 	];
 
+	// Picks a typo by cumulative probability. The 1.x version was a do/while
+	// that indexed the table before checking bounds; this loop stops at the
+	// catch-all entry ('*') and falls back to the last entry, choosing the same
+	// typo for every roll.
 	const randomTypo = () => {
 		const roll = random();
 		let cumulative = 0;
@@ -102,6 +106,7 @@ export function createClassicSimcockifier(
 		if (text.length <= 1) return input;
 
 		const words = text.split(WORD_SPLIT);
+		// 1.x declared its typo counter twice; one loop counter is enough.
 		const needed = Math.ceil(words.length * typosPerWord);
 		log(`TEXT: "${text}"`);
 		log(`Inspecting ${words.length} word(s) and generating ${needed} typo(s) at velocity ${velocity}`);
