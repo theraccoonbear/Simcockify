@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs';
+import { readFileSync, statSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { layerOptions, personaOptions, simcockify } from './core.js';
 import { KEYBOARD_MAPS } from './keyboard.js';
@@ -18,6 +18,7 @@ import {
 	typoVelocity,
 } from './options.js';
 import { PERSONAS } from './personas.js';
+import { isShorthandSpec, parseShorthand } from './shorthand.js';
 
 const FLAGS: Record<(typeof NUMERIC_OPTIONS)[number], string> = {
 	FiveHourEnergies: 'five-hour-energies',
@@ -29,9 +30,25 @@ const FLAGS: Record<(typeof NUMERIC_OPTIONS)[number], string> = {
 	EmployeesBlocked: 'employees-blocked',
 };
 
-const HELP = `Usage: simcockify [options] < input.txt > output.txt
+const HELP = `Usage: simcockify [options] [spec] [file]
+       command | simcockify [options] [spec]
 
-Reads text on stdin, writes the text with typos injected to stdout.
+Reads the file (or stdin when no file is named) and writes the text with
+typos injected to stdout.
+
+  cat my-document.md | simcockify fhe:3,eb:8 > human-document.md
+  simcockify s:demo,p:post-launch notes.txt
+
+Shorthand spec: one positional key:value[,key:value...] argument, keys:
+  c   Coffees                    e    Espressos
+  fhe FiveHourEnergies           hos  HoursOfSleep
+  mtc MinutesTalkingToClients    dl   DeadlinesLooming
+  eb  EmployeesBlocked           s    seed
+  f   fatigue                    p    persona
+  Full option names (any case), flag names such as five-hour-energies, and
+  engine, reveal and keyboard work as keys too.
+  A positional argument is read as a spec if it looks like key:value, else as
+  an input file if one exists by that name; anything else is an error.
 
 Velocity factors (how far off the intended key a typo lands):
   --five-hour-energies <n>         default 0
@@ -65,7 +82,7 @@ Config files use the option names: ${NUMERIC_OPTIONS.join(', ')},
 seed, keyboard, debug, engine, persona, fatigue, reveal, typoWeights (an object of typo weights).
 
 Options are layered lowest first: defaults, then the persona, then the
-config file, then flags. Typo weights layer per key.
+config file, then the shorthand spec, then flags. Typo weights layer per key.
 `;
 
 export class UsageError extends Error {}
@@ -213,6 +230,41 @@ function listPersonas(): string {
 	return lines.join('\n') + '\n';
 }
 
+function isFile(path: string): boolean {
+	try {
+		return statSync(path).isFile();
+	} catch {
+		return false;
+	}
+}
+
+/**
+ * Sorts positional arguments into shorthand specs and at most one input file.
+ * A spec is recognised first, so `fhe:3` is always a spec; otherwise the
+ * argument must name an existing file. `-` means stdin.
+ */
+function classifyPositionals(positionals: string[]): { specs: string[]; inputPath?: string } {
+	const specs: string[] = [];
+	let inputPath: string | undefined;
+	let sawStdin = false;
+	for (const arg of positionals) {
+		if (isShorthandSpec(arg)) {
+			specs.push(arg);
+			continue;
+		}
+		if (arg !== '-' && !isFile(arg)) {
+			const what = arg.includes(':')
+				? 'a key:value spec (check for spaces or a missing value) or an existing file'
+				: 'an existing file or a key:value spec';
+			throw new UsageError(`"${arg}" is not ${what}`);
+		}
+		if (inputPath !== undefined || sawStdin) throw new UsageError('only one input file can be given');
+		if (arg === '-') sawStdin = true;
+		else inputPath = arg;
+	}
+	return { specs, inputPath };
+}
+
 /** Runs the CLI and returns the process exit code. */
 export function run(argv: string[], io: CliIO): number {
 	try {
@@ -232,7 +284,12 @@ export function run(argv: string[], io: CliIO): number {
 		};
 		for (const flag of Object.values(FLAGS)) options[flag] = { type: 'string' };
 
-		const { values } = parseArgs({ args: normaliseArgs(argv), options, allowPositionals: false, strict: true });
+		const { values, positionals } = parseArgs({
+			args: normaliseArgs(argv),
+			options,
+			allowPositionals: true,
+			strict: true,
+		});
 
 		if (values.help) {
 			io.stdout(HELP);
@@ -252,6 +309,20 @@ export function run(argv: string[], io: CliIO): number {
 			applyValues(configFile, loadConfig(values.config), `${values.config}: `);
 		}
 
+		const shorthand: SimcockifyOptions = {};
+		const { specs, inputPath } = classifyPositionals(positionals);
+		for (const spec of specs) {
+			let entries;
+			try {
+				entries = parseShorthand(spec);
+			} catch (e) {
+				throw new UsageError((e as Error).message);
+			}
+			for (const { key, option, value } of entries) {
+				applyValues(shorthand, { [option]: value }, `shorthand ${key}:${value}: `);
+			}
+		}
+
 		const fromFlags: Record<string, unknown> = {};
 		for (const [name, flag] of Object.entries(FLAGS)) {
 			if (values[flag] !== undefined) fromFlags[name] = values[flag];
@@ -267,16 +338,25 @@ export function run(argv: string[], io: CliIO): number {
 		const flags: SimcockifyOptions = {};
 		applyValues(flags, fromFlags, '--');
 
-		// Lowest priority first: { ...DEFAULT_OPTIONS, ...persona, ...configFile, ...flags }.
-		const persona = personaOptions(flags.persona ?? configFile.persona);
-		const opts = layerOptions(DEFAULT_OPTIONS, persona, configFile, flags);
+		// Lowest priority first: { ...DEFAULT_OPTIONS, ...persona, ...configFile, ...shorthand, ...flags }.
+		const persona = personaOptions(flags.persona ?? shorthand.persona ?? configFile.persona);
+		const opts = layerOptions(DEFAULT_OPTIONS, persona, configFile, shorthand, flags);
 
 		if (opts.debug) opts.logger = (m) => io.stderr(m + '\n');
 
-		if (io.stdinIsTTY) {
-			throw new UsageError('no input: pipe text on stdin (see --help)');
+		let input: string;
+		if (inputPath !== undefined) {
+			try {
+				input = readFileSync(inputPath, 'utf8');
+			} catch (e) {
+				throw new UsageError(`cannot read ${inputPath}: ${(e as Error).message}`);
+			}
+		} else if (io.stdinIsTTY) {
+			throw new UsageError('no input: pipe text on stdin or name a file (see --help)');
+		} else {
+			input = io.stdin();
 		}
-		io.stdout(simcockify(io.stdin(), opts));
+		io.stdout(simcockify(input, opts));
 		return 0;
 	} catch (e) {
 		if (e instanceof UsageError || (e as NodeJS.ErrnoException).code?.startsWith('ERR_PARSE_ARGS')) {
