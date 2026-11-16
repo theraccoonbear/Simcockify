@@ -4,3 +4,5 @@ export type { SimcockifyOptions, Engine } from './options.js';
 export { KEYBOARD_MAPS, accessibleKeys, nearbyKeys } from './keyboard.js';
 export type { KeyboardMap, NearbyKey } from './keyboard.js';
 export { createRandom, hashCode } from './random.js';
+export { tokenize, isProtectedChunk } from './tokenize.js';
+export type { Token, TokenKind } from './tokenize.js';
