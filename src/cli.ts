@@ -1,6 +1,8 @@
 import { readFileSync, statSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 import { layerOptions, personaOptions, simcockify } from './core.js';
+import { detectFormat, FORMAT_ALIASES } from './formats/detect.js';
+import { FORMATS } from './formats/segment.js';
 import { KEYBOARD_MAPS } from './keyboard.js';
 import {
 	DEFAULT_OPTIONS,
@@ -46,9 +48,16 @@ Shorthand spec: one positional key:value[,key:value...] argument, keys:
   eb  EmployeesBlocked           s    seed
   f   fatigue                    p    persona
   Full option names (any case), flag names such as five-hour-energies, and
-  engine, reveal and keyboard work as keys too.
+  engine, reveal, keyboard and format work as keys too.
+  e.g. fhe:3,eb:8  s:demo,p:post-launch  dl:10,format:md
   A positional argument is read as a spec if it looks like key:value, else as
   an input file if one exists by that name; anything else is an error.
+
+Formats: only prose gets typos. Code, markup, URLs, math and the like are
+copied exactly.
+  --format <name>                  auto (default), text, markdown (md), html (htm, xml)
+                                   or latex (tex). auto scores the first 8 KB; a file's
+                                   extension is a strong hint. --format overrides both.
 
 Velocity factors (how far off the intended key a typo lands):
   --five-hour-energies <n>         default 0
@@ -79,7 +88,7 @@ Other:
   -v, --version                    show the version
 
 Config files use the option names: ${NUMERIC_OPTIONS.join(', ')},
-seed, keyboard, debug, engine, persona, fatigue, reveal, typoWeights (an object of typo weights).
+seed, keyboard, debug, engine, persona, fatigue, reveal, format, typoWeights (an object of typo weights).
 
 Options are layered lowest first: defaults, then the persona, then the
 config file, then the shorthand spec, then flags. Typo weights layer per key.
@@ -187,6 +196,14 @@ function applyValues(opts: SimcockifyOptions, values: Record<string, unknown>, s
 				throw new UsageError(`${source}reveal must be one of: ${REVEAL_MODES.join(', ')}`);
 			}
 			opts.reveal = value as RevealMode;
+		} else if (key === 'format') {
+			const name = typeof value === 'string' ? value.trim().toLowerCase() : '';
+			if (name !== 'auto' && !(name in FORMAT_ALIASES)) {
+				throw new UsageError(
+					`${source}format must be one of: auto, ${FORMATS.join(', ')} (or md, htm, xml, tex, txt)`,
+				);
+			}
+			opts.format = name === 'auto' ? 'auto' : FORMAT_ALIASES[name];
 		} else if (key === 'persona') {
 			if (typeof value !== 'string' || !(value in PERSONAS)) {
 				throw new UsageError(`${source}persona must be one of: ${Object.keys(PERSONAS).join(', ')}`);
@@ -280,6 +297,7 @@ export function run(argv: string[], io: CliIO): number {
 			fatigue: { type: 'string' },
 			persona: { type: 'string' },
 			reveal: { type: 'string' },
+			format: { type: 'string' },
 			'list-personas': { type: 'boolean' },
 		};
 		for (const flag of Object.values(FLAGS)) options[flag] = { type: 'string' };
@@ -334,6 +352,7 @@ export function run(argv: string[], io: CliIO): number {
 		if (values.fatigue !== undefined) fromFlags.fatigue = values.fatigue;
 		if (values.persona !== undefined) fromFlags.persona = values.persona;
 		if (values.reveal !== undefined) fromFlags.reveal = values.reveal;
+		if (values.format !== undefined) fromFlags.format = values.format;
 		if (typeof values.weights === 'string') fromFlags.typoWeights = parseWeightsFlag(values.weights);
 		const flags: SimcockifyOptions = {};
 		applyValues(flags, fromFlags, '--');
@@ -356,6 +375,8 @@ export function run(argv: string[], io: CliIO): number {
 		} else {
 			input = io.stdin();
 		}
+		// The CLI detects the format unless told otherwise; a file name is a strong hint.
+		if (opts.format === undefined || opts.format === 'auto') opts.format = detectFormat(input, inputPath);
 		io.stdout(simcockify(input, opts));
 		return 0;
 	} catch (e) {
