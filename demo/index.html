@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Simcockify demo</title>
+	<style>
+		:root { color-scheme: light dark; --gap: 1rem; --border: #8886; --accent: #2b6cb0; }
+		* { box-sizing: border-box; }
+		body { font: 16px/1.5 system-ui, sans-serif; margin: 0 auto; max-width: 70rem; padding: 0 var(--gap) 3rem; }
+		h1 { margin-bottom: 0; }
+		.tagline { margin-top: 0.25rem; opacity: 0.75; }
+		.layout { display: grid; grid-template-columns: 16rem 1fr; gap: var(--gap); align-items: start; }
+		@media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
+		fieldset { border: 1px solid var(--border); border-radius: 6px; margin: 0 0 var(--gap); }
+		legend { font-weight: 600; }
+		.control { display: flex; justify-content: space-between; align-items: center; gap: 0.5rem; margin: 0.35rem 0; }
+		.control input { width: 6rem; }
+		.control input[type="text"] { width: 9rem; }
+		textarea, .output { width: 100%; min-height: 9rem; border: 1px solid var(--border); border-radius: 6px; padding: 0.6rem; font: inherit; }
+		.output { white-space: pre-wrap; overflow-wrap: anywhere; }
+		.output[hidden] { display: none; }
+		button { font: inherit; padding: 0.35rem 0.8rem; cursor: pointer; }
+		h2 { font-size: 1.1rem; margin: var(--gap) 0 0.4rem; }
+		#dom-sample { border: 1px solid var(--border); border-radius: 6px; padding: 0 0.8rem; }
+		a { color: var(--accent); }
+	</style>
+</head>
+<body>
+	<h1>Simcockify</h1>
+	<p class="tagline">Inject human-style typos into text, with a seeded PRNG for repeatable output.
+		<a href="https://github.com/theraccoonbear/Simcockify">View on GitHub</a></p>
+
+	<div class="layout">
+		<aside>
+			<fieldset id="conditions"><legend>Conditions</legend></fieldset>
+			<fieldset id="seed-group"><legend>Seed</legend></fieldset>
+			<!-- Further groups (persona, reveal) can be added as new fieldsets here and registered in CONTROLS below. -->
+		</aside>
+
+		<main>
+			<h2><label for="input">Input</label></h2>
+			<textarea id="input" spellcheck="false">Leverage agile frameworks to provide a robust synopsis for high level overviews. Iterative approaches to corporate strategy foster collaborative thinking to further the overall value proposition. Organically grow the holistic world view of disruptive innovation via workplace diversity and empowerment.</textarea>
+
+			<h2>Output</h2>
+			<div id="output" class="output" aria-live="polite"></div>
+
+			<h2>DOM helper</h2>
+			<p>
+				<button id="dom-run" type="button">Simcockify the block below</button>
+				<button id="dom-reset" type="button">Reset</button>
+				(uses <code>Simcockify.simcockifyElement</code>; markup and links are preserved)
+			</p>
+			<div id="dom-sample">
+				<p>Bring to the table win-win <strong>survival strategies</strong> to ensure proactive domination. A <a href="https://github.com/theraccoonbear/Simcockify">streamlined cloud solution</a> is on the runway.</p>
+				<ul><li>Synergy</li><li>Synergize</li><li>Synergistic</li></ul>
+			</div>
+		</main>
+	</div>
+
+	<script src="simcockify.browser.js"></script>
+	<script>
+		// Each control maps to one Simcockify option. To add a control
+		// (e.g. persona, reveal), add an entry here and, if needed, a
+		// fieldset above; buildOptions() picks it up automatically.
+		var CONTROLS = [
+			{ group: 'conditions', key: 'Coffees', type: 'number', value: 2 },
+			{ group: 'conditions', key: 'Espressos', type: 'number', value: 0 },
+			{ group: 'conditions', key: 'FiveHourEnergies', type: 'number', value: 0 },
+			{ group: 'conditions', key: 'HoursOfSleep', type: 'number', value: 8 },
+			{ group: 'conditions', key: 'MinutesTalkingToClients', type: 'number', value: 90 },
+			{ group: 'conditions', key: 'DeadlinesLooming', type: 'number', value: 2 },
+			{ group: 'conditions', key: 'EmployeesBlocked', type: 'number', value: 1 },
+			{ group: 'seed-group', key: 'seed', type: 'text', value: 'repeatable-seed-abc-123', label: 'Seed (blank = random)' }
+		];
+
+		var inputEl = document.getElementById('input');
+		var outputEl = document.getElementById('output');
+		var fields = {};
+
+		CONTROLS.forEach(function (c) {
+			var label = document.createElement('label');
+			label.className = 'control';
+			label.appendChild(document.createTextNode(c.label || c.key));
+			var el = document.createElement('input');
+			el.type = c.type;
+			el.value = c.value;
+			if (c.type === 'number') { el.step = '1'; }
+			el.addEventListener('input', update);
+			label.appendChild(el);
+			document.getElementById(c.group).appendChild(label);
+			fields[c.key] = { control: c, el: el };
+		});
+
+		function buildOptions() {
+			var opts = {};
+			Object.keys(fields).forEach(function (key) {
+				var f = fields[key];
+				var raw = f.el.value;
+				if (f.control.type === 'number') {
+					var n = parseFloat(raw);
+					opts[key] = isNaN(n) ? 0 : n;
+				} else if (raw !== '') {
+					opts[key] = raw;
+				}
+			});
+			return opts;
+		}
+
+		function update() {
+			outputEl.textContent = Simcockify.simcockify(inputEl.value, buildOptions());
+		}
+		inputEl.addEventListener('input', update);
+
+		var domSample = document.getElementById('dom-sample');
+		var domOriginal = domSample.innerHTML;
+		document.getElementById('dom-run').addEventListener('click', function () {
+			Simcockify.simcockifyElement(domSample, buildOptions());
+		});
+		document.getElementById('dom-reset').addEventListener('click', function () {
+			domSample.innerHTML = domOriginal;
+		});
+
+		update();
+	</script>
+</body>
+</html>
